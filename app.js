@@ -1,7 +1,14 @@
 const express = require('express');
-const app = express();
-const port = 3333;
+var app = express()
+const Blockchain = require('./source/Blockchain.js');
+const routes = require('./source/routes.js');
+const PORT = process.env.PORT || 3333;
 
-app.get('/', (req, res) => res.send('Hello World!'));
+app.listen(PORT, function () {
+    console.log('App listening on port: ' + PORT);
+});
+app.use(express.json());
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+const blockchain = new Blockchain();
+routes(app, blockchain);
+
