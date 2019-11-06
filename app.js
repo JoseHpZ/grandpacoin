@@ -1,5 +1,5 @@
 const express = require('express');
-var app = express()
+const app = express();
 const Blockchain = require('./source/Blockchain.js');
 const routes = require('./source/routes.js');
 const PORT = process.env.PORT || 3333;
