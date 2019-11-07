@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const Blockchain = require('./source/Blockchain.js');
 const routes = require('./source/routes.js');
 const PORT = process.env.PORT || 3333;
 
@@ -9,6 +8,5 @@ app.listen(PORT, function () {
 });
 app.use(express.json());
 
-const blockchain = new Blockchain();
-routes(app, blockchain);
+routes(app);
 
