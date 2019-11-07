@@ -1,13 +1,14 @@
+const Blockchain = require('./Blockchain.js');
+const blockchain = new Blockchain();
 const responseData = require('../utils/functions').responseData;
 
-
-module.exports = (app, blockchain) => {
+module.exports = (app) => {
     app.get('/info', function (req, res) {
     })
     app.get('/debug', function (req, res) {
     })
-    app.get('/debug/reset-chain', function (req, res) {
-    })
+    app.get('/debug/reset-chain', blockchain.resetChain);
+
     app.get('/blocks', function (req, res) {
     })
     app.get('/blocks/:index', blockchain.getBlock);
