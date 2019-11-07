@@ -1,4 +1,6 @@
 const responseData = require('../utils/functions').responseData;
+const Block = require('./Block');
+const initialDifficulty = require('../global').initialDifficulty;
 
 class Blockchain {
     constructor() {
@@ -7,7 +9,15 @@ class Blockchain {
         this.confirmedTransactions = [];
         this.blocksCount = 0;
         this.nodes = [];
-        this.getBlock = this.getBlock.bind(this)
+        this.chain.push(new Block({
+            index: 0,
+            prevBlockHash: '0',
+            previousDifficulty: 0,
+            pendingTransactions: this.pendingTransactions,
+            nonce: 0,
+            minedBy: '00000000000000000000000000000000'
+        }));
+        this.getBlock = this.getBlock.bind(this);
     }
 
     getBlock(req, response) {
@@ -18,6 +28,7 @@ class Blockchain {
         }
         return response.json(responseData(this.chain[req.params.index]));
     }
+    
 }
 
 module.exports = Blockchain;
