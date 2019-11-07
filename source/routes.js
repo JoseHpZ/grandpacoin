@@ -9,9 +9,8 @@ module.exports = (app) => {
     })
     app.get('/debug/reset-chain', blockchain.resetChain);
 
-    app.get('/blocks', function (req, res) {
-    })
-    app.get('/blocks/:index', blockchain.getBlock);
+    app.get('/blocks', blockchain.getBlocks);
+    app.get('/blocks/:index', blockchain.getBlockByIndex);
     app.get('/transactions/pending', function (req, res) {
     })
     app.get('/transactions/confirmed', function (req, res) {

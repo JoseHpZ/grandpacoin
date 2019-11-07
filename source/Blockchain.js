@@ -5,8 +5,9 @@ const initialDifficulty = require('../global').initialDifficulty;
 class Blockchain {
     constructor() {
         this.initBlockchain();
-        this.getBlock = this.getBlock.bind(this);
+        this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.resetChain = this.resetChain.bind(this);
+        this.getBlocks = this.getBlocks.bind(this);
     }
     initBlockchain() {
         this.chain = [];
@@ -23,7 +24,7 @@ class Blockchain {
             minedBy: '00000000000000000000000000000000'
         }));
     }
-    getBlock(req, response) {
+    getBlockByIndex(req, response) {
         if (!req.params.index || !this.chain[req.params.index]) {
             return response
                 .status(404)
@@ -31,11 +32,16 @@ class Blockchain {
         }
         return response.json(responseData(this.chain[req.params.index]));
     }
-    resetChain(request, response) {
+    resetChain({ res }) {
         this.initBlockchain();
-        return response
+        return res
             .status(200)
-            .json(responseData({ message: 'The chain was reset to its genesis block.' }));
+            .json({ message: 'The chain was reset to its genesis block.' });
+    }
+    getBlocks({ res }) {
+        return res
+            .status(200)
+            .json({data: this.chain});
     }
 }
 
