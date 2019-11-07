@@ -1,33 +1,39 @@
 const crypto = require('crypto');
 
-function Block({index, previousBlockHash, previousProof, pendingTransactions, lastBlock}) {
-    class SingleBlock {
-        static getBlockHash(lastBlock) {
+function Block({index, prevBlockHash, previousDifficulty, pendingTransactions, nonce, minedBy}) {
+    class BlockchainBlock {
+        static getBlockHash(blockObject) {
             return crypto.createHash('sha256')
-                .update(JSON.stringify(lastBlock))
+                .update(JSON.stringify(blockObject))
                 .digest('hex');
         }
     
         constructor() {
             this.index = index;
-            this.proof = previousProof;
-            this.previousBlockHash = previousBlockHash;
+            this.difficulty = previousDifficulty;
+            this.prevBlockHash = prevBlockHash;
             this.pendingTransactions = pendingTransactions;
-            this.lastBlock = lastBlock;
-            this.timestamp = Date.now().toISOString();
+            this.dateCreated = (new Date()).toISOString();
+            this.nonce = nonce;
+            this.minedBy = minedBy;
         }
         getBlock() {
-            const { index, previousBlockHash, proof, pendingTransactions: transactions, lastBlock };
+            const { index, prevBlockHash, difficulty, pendingTransactions: transactions, nonce, minedBy, dateCreated } = this;
+            const blockDataHash = BlockchainBlock.getBlockHash({index, transactions, difficulty, prevBlockHash, minedBy});
             return {
                 index,
-                timestamp,
                 transactions,
-                proof,
-                previousHash: previousBlockHash || SingleBlock.hash(lastBlock)
+                difficulty,
+                prevBlockHash: prevBlockHash,
+                minedBy,
+                blockDataHash,
+                nonce,
+                dateCreated,
+                blockHash: BlockchainBlock.getBlockHash({blockDataHash, nonce, dateCreated})
             }
         }
     }
-    return (new SingleBlock()).getBlock();
+    return (new BlockchainBlock()).getBlock();
 }
 
 
