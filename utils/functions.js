@@ -1,11 +1,6 @@
 const crypto = require('crypto');
 const uuidv4 = require('uuid/v4');
 
-
-function responseData(data) {
-    return { data };
-}
-
 function generateNodeId() {
     return crypto
         .createHash('sha256')
@@ -14,6 +9,5 @@ function generateNodeId() {
 }
 
 module.exports = {
-    responseData,
     generateNodeId,
 }
