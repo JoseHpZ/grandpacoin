@@ -28,10 +28,11 @@ class Blockchain {
             nonce: 0,
             minedBy: '00000000000000000000000000000000',
         }));
-        this.getBlock = this.getBlock.bind(this);
+        this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.getInfo = this.getInfo.bind(this);
         this.debug = this.debug.bind(this);
     }
+    
     getBlockByIndex(req, response) {
         if (!req.params.index || !this.chain[req.params.index]) {
             return response
@@ -41,7 +42,6 @@ class Blockchain {
         return response.json(this.chain[req.params.index]);
     }
 
-    resetChain(request, response) {
     resetChain({ res }) {
         this.initBlockchain();
         return res
