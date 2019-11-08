@@ -3,10 +3,8 @@ const blockchain = new Blockchain();
 const responseData = require('../utils/functions').responseData;
 
 module.exports = (app) => {
-    app.get('/info', function (req, res) {
-    })
-    app.get('/debug', function (req, res) {
-    })
+    app.get('/info', blockchain.getInfo);
+    app.get('/debug', blockchain.debug);
     app.get('/debug/reset-chain', blockchain.resetChain);
 
     app.get('/blocks', blockchain.getBlocks);
