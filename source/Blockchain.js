@@ -2,6 +2,7 @@ const responseData = require('../utils/functions').responseData;
 const generateNodeId = require('../utils/functions').generateNodeId;
 const Block = require('./Block');
 const globalConfigs = require('../global');
+const Transaction = require('./Transaction');
 
 
 class Blockchain {
@@ -11,6 +12,7 @@ class Blockchain {
         this.resetChain = this.resetChain.bind(this);
         this.getBlocks = this.getBlocks.bind(this);
         this.getTransactionByHash = this.getTransactionByHash.bind(this);
+        this.sendTransaction = this.sendTransaction.bind(this);
     }
     initBlockchain() {
         this.chain = [];
@@ -47,7 +49,7 @@ class Blockchain {
     getBlocks({ res }) {
         return res
             .status(200)
-            .json({data: this.chain});
+            .json({ data: this.chain });
     }
 
     getInfo(request, response) {
@@ -66,12 +68,11 @@ class Blockchain {
             })
         );
     }
-    
 
     getTransactionByHash(request, response) {
         const hash = request.params.hash;
 
-        if (!/^0x([A-Fa-f0-9]{64})$/.test(hash)) {
+        if (!/^([A-Fa-f0-9]{64})$/.test(hash)) {
             return response
                 .status(400)
                 .json({ message: 'Invalid transaction hash' })
@@ -88,6 +89,40 @@ class Blockchain {
         return response
             .status(404)
             .json({ message: 'Transaction not found' })
+    }
+
+    sendTransaction(request, response) {
+        const { from, to, value, fee, senderPubKey, data, senderSignature } = request.body;
+
+        if (!/^([A-Fa-f0-9]{40})$/.test(from)) {
+            return response
+                .status(400)
+                .json({ message: "Invalid 'from' address" })
+        }
+
+        if (!/^([A-Fa-f0-9]{40})$/.test(to)) {
+            return response
+                .status(400)
+                .json({ message: "Invalid 'to' address" })
+        }
+
+        if (!/^([A-Fa-f0-9]{65})$/.test(senderPubKey)) {
+            return response
+                .status(400)
+                .json({ message: "Invalid sender public key" })
+        }
+
+        if (!/^([A-Fa-f0-9]{64})$/.test(senderSignature)) {
+            return response
+                .status(400)
+                .json({ message: "Invalid sender signature" })
+        }
+
+        this.pendingTransactions.push(Transaction(from, to, value, fee, senderPubKey, data, senderSignature).data)
+
+        return response
+            .status(200)
+            .json(this.pendingTransactions[this.pendingTransactions.length - 1])
     }
 }
 

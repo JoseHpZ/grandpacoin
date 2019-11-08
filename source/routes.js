@@ -25,8 +25,7 @@ module.exports = (app) => {
     })
     app.post('/address/:invalidAddress/balance', function (req, res) {
     })
-    app.post('/transactions/send', function (req, res) {
-    })
+    app.post('/transactions/send', blockchain.sendTransaction)
     app.get('/mining/get-mining-job/:minerAddress', function (req, res) {
     })
     app.post('/mining/submit-mined-block', function (req, res) {
