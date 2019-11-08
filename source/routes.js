@@ -9,8 +9,7 @@ module.exports = (app) => {
 
     app.get('/blocks', blockchain.getBlocks);
     app.get('/blocks/:index', blockchain.getBlockByIndex);
-    app.get('/transactions/pending', function (req, res) {
-    })
+    app.get('/transactions/pending', blockchain.getPendingTransactions);
     app.get('/transactions/confirmed', function (req, res) {
     })
 

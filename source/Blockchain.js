@@ -11,6 +11,9 @@ class Blockchain {
         this.getBlocks = this.getBlocks.bind(this);
         this.getAddressesBalances = this.getAddressesBalances.bind(this);
         this.getTransactionByHash = this.getTransactionByHash.bind(this);
+        this.getPendingTransactions = this.getPendingTransactions.bind(this);
+        this.getConfirmedTransactions = this.getConfirmedTransactions.bind(this);
+        this.addBlockToChain = this.addBlockToChain.bind(this);
     }
     initBlockchain() {
         this.chain = [];
@@ -54,7 +57,26 @@ class Blockchain {
     getBlocks({ res }) {
         return res
             .status(200)
-            .json({ data: this.chain });
+            .json(this.chain);
+    }
+    getPendingTransactions({ res }) {
+        return res
+            .status(200)
+            .json(this.pendingTransactions);
+    }
+    getConfirmedTransactions({ res }) {
+        return res
+            .status(200)
+            .json(this.confirmedTransactions);
+    }
+    addBlockToChain(req) {
+        new Block({
+            index: this.chain.length,
+            prevBlockHash: this.chain[this.chain.length - 1].blockHash,
+            previousDifficulty: this.chain[this.chain.length - 1].difficulty,
+            pendingTransactions: this.pendingTransactions, 
+            minedBy: req.params.minerAddress
+        });
     }
 
     getInfo(req, response) {
