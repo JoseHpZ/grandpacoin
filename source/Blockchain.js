@@ -9,17 +9,19 @@ class Blockchain {
         this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.resetChain = this.resetChain.bind(this);
         this.getBlocks = this.getBlocks.bind(this);
+        this.getAddressesBalances = this.getAddressesBalances.bind(this);
     }
     initBlockchain() {
         this.chain = [];
         this.pendingTransactions = [];
         this.confirmedTransactions = [];
-        this.currentDifficulty = globalConfigs.initialDifficulty,
+        this.currentDifficulty = globalConfigs.initialDifficulty;
         this.cumulativeDifficulty = 0;
         this.addresses = [];
         this.nodes = [];
         this.peers = [];
         this.nodeId = generateNodeId();
+
         this.chain.push(new Block({
             index: 0,
             prevBlockHash: '0',
@@ -32,7 +34,7 @@ class Blockchain {
         this.getInfo = this.getInfo.bind(this);
         this.debug = this.debug.bind(this);
     }
-    
+
     getBlockByIndex(req, response) {
         if (!req.params.index || !this.chain[req.params.index]) {
             return response
@@ -51,7 +53,7 @@ class Blockchain {
     getBlocks({ res }) {
         return res
             .status(200)
-            .json({data: this.chain});
+            .json({ data: this.chain });
     }
 
     getInfo(req, response) {
@@ -60,7 +62,7 @@ class Blockchain {
             nodeId: this.nodeId,
             peers: this.peers,
             chainId: this.chain[0].blockHash,
-            nodeUrl:  req.protocol + '://' + req.get('host'),
+            nodeUrl: req.protocol + '://' + req.get('host'),
             currentDifficult: this.currentDifficulty,
             blocksCount: this.chain.length,
             cumulativeDifficulty: this.cumulativeDifficulty,
@@ -86,7 +88,24 @@ class Blockchain {
             pendingTransactions: this.pendingTransactions.length,
         });
     }
-    
+
+    getAddressesBalances() {
+        let addresses = this.addresses;
+        let addressesInfo = null;
+        if (addresses.length > 0) {
+            addressesInfo = addresses.filter(({ confirmedBalance }) => confirmedBalance !== 0)
+                .map(({ address, safeBalance }) => {
+                    return {
+                        [address]: safeBalance
+                    };
+                });
+        }
+        if (addressesInfo) {
+            return response.send({ addressesBalances: addressesInfo });
+        }
+        return response.status(400).send({ message: 'No Addresses Found' })
+    }
+
 }
 
 module.exports = Blockchain;
