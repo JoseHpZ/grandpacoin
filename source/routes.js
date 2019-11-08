@@ -38,6 +38,6 @@ module.exports = (app) => {
     app.post('/peers/notify-new-block', function (req, res) {
     })
     app.get('*', function (req, res) {
-        res.status(404).json(responseData({ message: 'This route does not exists.' }))
+        res.status(404).json({ message: 'This route does not exists.' })
     })
 }

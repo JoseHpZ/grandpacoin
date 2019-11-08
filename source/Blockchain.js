@@ -78,7 +78,7 @@ class Blockchain {
         });
     }
 
-    getInfo({ res }) {
+    getInfo(req, res) {
         return res.json({
             about: globalConfigs.appName,
             nodeId: this.nodeId,
@@ -93,7 +93,7 @@ class Blockchain {
         });
     }
 
-    debug({ res }) {
+    debug(req, res) {
         return res.json({
             selfUrl: req.protocol + '://' + req.get('host'),
             nodeId: this.nodeId,
