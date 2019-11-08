@@ -10,6 +10,7 @@ class Blockchain {
         this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.resetChain = this.resetChain.bind(this);
         this.getBlocks = this.getBlocks.bind(this);
+        this.getTransactionByHash = this.getTransactionByHash.bind(this);
     }
     initBlockchain() {
         this.chain = [];
@@ -26,7 +27,7 @@ class Blockchain {
             nonce: 0,
             minedBy: '00000000000000000000000000000000'
         }));
-        this.getBlock = this.getBlock.bind(this);
+        this.getBlocks = this.getBlocks.bind(this);
         this.getInfo = this.getInfo.bind(this);
     }
     getBlockByIndex(req, response) {
@@ -66,6 +67,28 @@ class Blockchain {
         );
     }
     
+
+    getTransactionByHash(request, response) {
+        const hash = request.params.hash;
+
+        if (!/^0x([A-Fa-f0-9]{64})$/.test(hash)) {
+            return response
+                .status(400)
+                .json({ message: 'Invalid transaction hash' })
+        }
+
+        let transaction = this.confirmedTransactions.find(txn => txn.transactionDataHash === hash)
+
+        if (transaction) return response.status(200).json(transaction)
+
+        transaction = this.pendingTransactions.find(txn => txn.transactionDataHash === hash)
+
+        if (transaction) return response.status(200).json(transaction)
+
+        return response
+            .status(404)
+            .json({ message: 'Transaction not found' })
+    }
 }
 
 module.exports = Blockchain;
