@@ -7,4 +7,5 @@ module.exports = Object.freeze({
         granSon: 1,
     },
     mininumTransactionFee: 10,
+    time: 8,
 })

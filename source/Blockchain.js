@@ -15,7 +15,9 @@ class Blockchain {
         this.getPendingTransactions = this.getPendingTransactions.bind(this);
         this.getConfirmedTransactions = this.getConfirmedTransactions.bind(this);
         this.addBlockToChain = this.addBlockToChain.bind(this);
+        this.getAddressesBalances = this.getAddressesBalances.bind(this);
     }
+
     initBlockchain() {
         this.chain = [];
         this.pendingTransactions = [];
@@ -26,6 +28,7 @@ class Blockchain {
         this.nodes = [];
         this.peers = [];
         this.nodeId = generateNodeId();
+
         this.chain.push(new Block({
             index: 0,
             prevBlockHash: '0',
@@ -55,21 +58,25 @@ class Blockchain {
             .status(200)
             .json({ message: 'The chain was reset to its genesis block.' });
     }
+
     getBlocks({ res }) {
         return res
             .status(200)
             .json(this.chain);
     }
+
     getPendingTransactions({ res }) {
         return res
             .status(200)
             .json(this.pendingTransactions);
     }
+
     getConfirmedTransactions({ res }) {
         return res
             .status(200)
             .json(this.confirmedTransactions);
     }
+
     addBlockToChain(req) {
         new Block({
             index: this.chain.length,
@@ -168,6 +175,24 @@ class Blockchain {
             .status(200)
             .json(this.pendingTransactions[this.pendingTransactions.length - 1])
     }
+
+    getAddressesBalances() {
+        let addresses = this.addresses;
+        let addressesInfo = null;
+        if (addresses.length > 0) {
+            addressesInfo = addresses.filter(({ confirmedBalance }) => confirmedBalance !== 0)
+                .map(({ address, safeBalance }) => {
+                    return {
+                        [address]: safeBalance
+                    };
+                });
+        }
+        if (addressesInfo) {
+            return response.send({ addressesBalances: addressesInfo });
+        }
+        return response.status(400).send({ message: 'No Addresses Found' })
+    }
+
 }
 
 module.exports = Blockchain;
