@@ -8,4 +8,5 @@ module.exports = Object.freeze({
         granSon: 1,
     },
     mininumTransactionFee: 10,
+    blockReward: 5000000,
 })
