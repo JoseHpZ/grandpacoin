@@ -13,8 +13,9 @@ module.exports = (app) => {
     })
     app.get('/transactions/confirmed', function (req, res) {
     })
-    app.get('/transactions/:hash', function (req, res) {
-    })
+
+    app.get('/transactions/:hash', blockchain.getTransactionByHash)
+
     app.get('/balances', function (req, res) {
     })
     app.get('/address/:address/transactions', function (req, res) {
