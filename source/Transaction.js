@@ -6,40 +6,33 @@ const TRANSACTION_STATUS = {
 };
 
 function Transaction(_from, _to, _value, _fee, _senderPubKey, _data, _senderSignature) {
-    var from = _from;
-    var to = _to;
-    var value = _value;
-    var fee = _fee;
-    var dateCreated = new Date().toISOString();
-    var data = _data;
-    var senderPubKey = _senderPubKey;
-    var transationDataHash = null;
-    var senderSignature = _senderSignature;
+    var _dateCreated = new Date().toISOString();
+    var _transactionDataHash = null;
 
     class SingleTransaction {
         constructor() {
-            transationDataHash = sha256(JSON.stringify({
-                from,
-                to,
-                value,
-                fee,
-                dateCreated,
-                data,
-                senderPubKey,
+            _transactionDataHash = sha256(JSON.stringify({
+                _from,
+                _to,
+                _value,
+                _fee,
+                _dateCreated,
+                _data,
+                _senderPubKey,
             }));
         }
 
         get data() {
             return {
-                from,
-                to,
-                value,
-                fee,
-                dateCreated,
-                data,
-                senderPubKey,
-                transationDataHash,
-                senderSignature,
+                from: _from,
+                to: _to,
+                value: _value,
+                fee: _fee,
+                dateCreated: _dateCreated,
+                data: _data,
+                senderPubKey: _senderPubKey,
+                transactionDataHash: _transactionDataHash,
+                senderSignature: _senderSignature,
             }
         }
     }
