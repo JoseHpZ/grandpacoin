@@ -199,11 +199,11 @@ class Blockchain {
                 .json(addressBalance)
         }
 
-        // if (senderAddressBalances.safeBalance <= (value + fee)) {
-        //     return response
-        //         .status(500)
-        //         .json({ message: "Balance is not enough to generate transaction" });
-        // }
+        if (senderAddressBalances.safeBalance <= (value + fee)) {
+            return response
+                .status(500)
+                .json({ message: "Balance is not enough to generate transaction" });
+        }
 
         this.pendingTransactions.push(Transaction(from, to, value, fee, senderPubKey, data, senderSignature).data)
 
