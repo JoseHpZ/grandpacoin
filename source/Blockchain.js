@@ -18,9 +18,9 @@ class Blockchain {
         this.getConfirmedTransactions = this.getConfirmedTransactions.bind(this);
         this.addBlockToChain = this.addBlockToChain.bind(this);
         this.getAddressesBalances = this.getAddressesBalances.bind(this);
-        this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.getInfo = this.getInfo.bind(this);
         this.debug = this.debug.bind(this);
+        this.getBalancesForAddress = this.getBalancesForAddress.bind(this);
         this.listTransactionForAddress = this.listTransactionForAddress.bind(this);
     }
 
@@ -106,6 +106,7 @@ class Blockchain {
         return res.json({
             selfUrl: req.protocol + '://' + req.get('host'),
             nodeId: this.nodeId,
+            coins: globalConfigs.coins,
             peers: this.peers,
             transactions: this.confirmedTransactions,
             currentDifficult: this.currentDifficulty,
@@ -208,6 +209,27 @@ class Blockchain {
             return response.json({ addressesInfo });
         }
         return response.json({})
+    }
+
+    getBalancesForAddress({ params: { address }, res }) {
+        console.log(address)
+        if (!isValidAddress(address) || !this.addresses[address]) {
+            return res
+                .status(404)
+                .json({ message: 'Invalid address, or does not exists.' });
+        }
+        if (!this.addresses[address].transactions) {
+            return res.json({
+                safeBalance: 0,
+                confirmedBalance: 0,
+                pendingBalance: 0,
+            })
+        }
+        return res.json({
+            safeBalance: this.addresses[address].safeBalance,
+            confirmedBalance: this.addresses[address].confirmedBalance,
+            pendingBalance: this.addresses[address].pendingBalance,
+        });
     }
 
     listTransactionForAddress({ params: { address } }, response) {
