@@ -44,12 +44,15 @@ function getAddressBalances(address, addresses) {
         confirmedBalance: addresses[address].confirmedBalance,
         pendingBalance: addresses[address].pendingBalance,
     };
+}
+
 function clearEmptyTransactionsData(transactions) {
     transactions.forEach(transaction => {
         clearSingleTransactionData(transaction);
     });
     return transactions;
 }
+
 function clearSingleTransactionData(transaction) {
     if (Object.keys(transaction).includes('data') && transaction.data.trim() === '') {
         delete transaction.data;
@@ -62,6 +65,6 @@ module.exports = {
     isValidPubKey,
     isValidSignature,
     isValidTransactionHash,
-    getAddressBalances
-    clearEmptyTransactionsData
+    getAddressBalances,
+    clearEmptyTransactionsData,
 }

@@ -206,6 +206,15 @@ class Blockchain {
         }
 
         this.pendingTransactions.push(Transaction(from, to, value, fee, senderPubKey, data, senderSignature).data)
+        this.pendingTransactions.push(new Transaction({
+            from,
+            to,
+            value,
+            fee,
+            senderPubKey,
+            data,
+            senderSignature: senderSignature[1]
+        }))
 
         return response
             .status(200)
