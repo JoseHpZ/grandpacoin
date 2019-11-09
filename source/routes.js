@@ -12,13 +12,9 @@ module.exports = (app) => {
     app.get('/transactions/pending', blockchain.getPendingTransactions);
     app.get('/transactions/confirmed', function (req, res) {
     })
-
     app.get('/transactions/:hash', blockchain.getTransactionByHash)
-
-    app.get('/balances', function (req, res) {
-    })
-    app.get('/address/:address/transactions', function (req, res) {
-    })
+    app.get('/balances', blockchain.getAddressesBalances);
+    app.get('/address/:address/transactions', blockchain.listTransactionForAddress)
     app.get('/address/:address/balance', function (req, res) {
     })
     app.post('/address/:invalidAddress/balance', function (req, res) {

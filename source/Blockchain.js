@@ -21,14 +21,15 @@ class Blockchain {
         this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.getInfo = this.getInfo.bind(this);
         this.debug = this.debug.bind(this);
+        this.listTransactionForAddress = this.listTransactionForAddress.bind(this);
     }
 
     initBlockchain() {
         this.chain = [];
         this.pendingTransactions = [];
         this.confirmedTransactions = [];
-        this.currentDifficulty = globalConfigs.initialDifficulty,
-            this.cumulativeDifficulty = 0;
+        this.currentDifficulty = globalConfigs.initialDifficulty;
+        this.cumulativeDifficulty = 0;
         this.addresses = [];
         this.nodes = [];
 
@@ -192,7 +193,7 @@ class Blockchain {
             .json(this.pendingTransactions[this.pendingTransactions.length - 1])
     }
 
-    getAddressesBalances() {
+    getAddressesBalances(req, response) {
         let addresses = this.addresses;
         let addressesInfo = null;
         if (addresses.length > 0) {
@@ -204,9 +205,22 @@ class Blockchain {
                 });
         }
         if (addressesInfo) {
-            return response.send({ addressesBalances: addressesInfo });
+            return response.json({ addressesInfo });
         }
-        return response.status(400).send({ message: 'No Addresses Found' })
+        return response.json({})
+    }
+
+    listTransactionForAddress({ params: { address } }, response) {
+        let transactions = [
+            ...this.confirmedTransactions,
+            ...this.pendingTransactions
+        ].filter((transaction) => transaction.from === address || transaction.to === address);
+
+        if (!transactions) {
+            return response.json({});
+        }
+
+        return response.json({ address, transactions });
     }
 
 }
