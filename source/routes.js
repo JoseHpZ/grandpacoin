@@ -26,8 +26,7 @@ module.exports = (app) => {
     app.get('/address/:address/transactions', blockchain.listTransactionForAddress);
     app.get('/address/:address/balance', blockchain.getBalancesForAddress);
     app.post('/transactions/send', blockchain.sendTransaction);
-    app.get('/mining/get-mining-job/:minerAddress', function (req, res) {
-    })
+    app.get('/mining/get-mining-job/:minerAddress', blockchain.getMiningJob)
     app.post('/mining/submit-mined-block', function (req, res) {
     })
 

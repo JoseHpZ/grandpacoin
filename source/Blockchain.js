@@ -1,4 +1,4 @@
-const { generateNodeId, isValidAddress, isValidPubKey, isValidSignature, isValidTransactionHash } = require('../utils/functions');
+const generateNodeId = require('../utils/functions').generateNodeId;
 const Block = require('./Block');
 const globalConfigs = require('../global');
 const Transaction = require('./Transaction');
@@ -16,12 +16,13 @@ class Blockchain {
         this.sendTransaction = this.sendTransaction.bind(this);
         this.getPendingTransactions = this.getPendingTransactions.bind(this);
         this.getConfirmedTransactions = this.getConfirmedTransactions.bind(this);
-        this.addBlockToChain = this.addBlockToChain.bind(this);
         this.getAddressesBalances = this.getAddressesBalances.bind(this);
         this.getInfo = this.getInfo.bind(this);
         this.debug = this.debug.bind(this);
         this.getBalancesForAddress = this.getBalancesForAddress.bind(this);
         this.listTransactionForAddress = this.listTransactionForAddress.bind(this);
+        this.getMiningJob = this.getMiningJob.bind(this);
+        this.blockCandidates = {};
     }
 
     initBlockchain() {
@@ -32,15 +33,12 @@ class Blockchain {
         this.cumulativeDifficulty = 0;
         this.addresses = [];
         this.nodes = [];
-
-        this.chain.push(new Block({
-            index: 0,
-            prevBlockHash: '0',
-            previousDifficulty: 0,
-            pendingTransactions: this.pendingTransactions,
-            nonce: 0,
-            minedBy: '00000000000000000000000000000000',
-        }));
+        this.peers = [];
+        this.nodeId = generateNodeId();
+        this.chain.push(Block.getGenesisBlock());
+        this.getBlockByIndex = this.getBlockByIndex.bind(this);
+        this.getInfo = this.getInfo.bind(this);
+        this.debug = this.debug.bind(this);
     }
 
     getBlockByIndex(req, response) {
@@ -76,15 +74,18 @@ class Blockchain {
             .status(200)
             .json(this.confirmedTransactions);
     }
-
-    addBlockToChain(req) {
-        new Block({
+    getMiningJob(req, res) {
+        const block = Block.getCandidateBlock({
             index: this.chain.length,
             prevBlockHash: this.chain[this.chain.length - 1].blockHash,
             previousDifficulty: this.chain[this.chain.length - 1].difficulty,
-            pendingTransactions: this.pendingTransactions,
-            minedBy: req.params.minerAddress
+            pendingTransactions: this.pendingTransactions, 
+            minerAddress: req.params.minerAddress
         });
+        const { miningJob, ...blockCandidate } = block;
+        this.blockCandidates = {...this.blockCandidates, ...blockCandidate};
+        
+        return res.status(200).json(miningJob);
     }
 
     getInfo(req, res) {
