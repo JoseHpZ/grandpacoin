@@ -6,6 +6,8 @@ const Transaction = require('./Transaction');
 
 class Blockchain {
     constructor() {
+        this.nodeId = generateNodeId();
+        this.peers = [];
         this.initBlockchain();
         this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.resetChain = this.resetChain.bind(this);
@@ -16,6 +18,10 @@ class Blockchain {
         this.getConfirmedTransactions = this.getConfirmedTransactions.bind(this);
         this.addBlockToChain = this.addBlockToChain.bind(this);
         this.getAddressesBalances = this.getAddressesBalances.bind(this);
+        this.getTransactionByHash = this.getTransactionByHash.bind(this);
+        this.getBlockByIndex = this.getBlockByIndex.bind(this);
+        this.getInfo = this.getInfo.bind(this);
+        this.debug = this.debug.bind(this);
     }
 
     initBlockchain() {
@@ -26,8 +32,6 @@ class Blockchain {
             this.cumulativeDifficulty = 0;
         this.addresses = [];
         this.nodes = [];
-        this.peers = [];
-        this.nodeId = generateNodeId();
 
         this.chain.push(new Block({
             index: 0,
@@ -37,10 +41,6 @@ class Blockchain {
             nonce: 0,
             minedBy: '00000000000000000000000000000000',
         }));
-        this.getBlocks = this.getBlocks.bind(this);
-        this.getBlockByIndex = this.getBlockByIndex.bind(this);
-        this.getInfo = this.getInfo.bind(this);
-        this.debug = this.debug.bind(this);
     }
 
     getBlockByIndex(req, response) {
@@ -87,8 +87,8 @@ class Blockchain {
         });
     }
 
-    getInfo(req, response) {
-        return response.json({
+    getInfo(req, res) {
+        return res.json({
             about: globalConfigs.appName,
             nodeId: this.nodeId,
             peers: this.peers,
@@ -102,13 +102,9 @@ class Blockchain {
         });
     }
 
-    debug(req, response) {
-        return response.json({
+    debug(req, res) {
+        return res.json({
             selfUrl: req.protocol + '://' + req.get('host'),
-            chain: {
-                blocks: this.chain,
-                prevBlockHash: this.chain,
-            },
             nodeId: this.nodeId,
             peers: this.peers,
             transactions: this.confirmedTransactions,
@@ -117,7 +113,28 @@ class Blockchain {
             cumulativeDifficulty: this.cumulativeDifficulty,
             confirmedTransactions: this.confirmedTransactions.length,
             pendingTransactions: this.pendingTransactions.length,
+            chain: {
+                blocks: this.chain,
+                prevBlockHash: this.chain,
+            },
         });
+    }
+
+    getAddressesBalances() {
+        let addresses = this.addresses;
+        let addressesInfo = null;
+        if (addresses.length > 0) {
+            addressesInfo = addresses.filter(({ confirmedBalance }) => confirmedBalance !== 0)
+                .map(({ address, safeBalance }) => {
+                    return {
+                        [address]: safeBalance
+                    };
+                });
+        }
+        if (addressesInfo) {
+            return response.send({ addressesBalances: addressesInfo });
+        }
+        return response.status(400).send({ message: 'No Addresses Found' })
     }
 
     getTransactionByHash(request, response) {
