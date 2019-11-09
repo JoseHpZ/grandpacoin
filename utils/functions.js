@@ -12,7 +12,7 @@ function isValidAddress(address) {
     const unprefixedAddress = address.replace(/^0x/, '');
     if (/^([A-Fa-f0-9]{40})$/.test(unprefixedAddress))
         return unprefixedAddress;
-    else 
+    else
         return false;
 }
 
@@ -28,6 +28,22 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
+function getAddressBalances(address, addresses) {
+    if (!isValidAddress(address)) {
+        return { message: 'Invalid address, or does not exists.' };
+    }
+    if (!addresses[address]) {
+        return {
+            safeBalance: 0,
+            confirmedBalance: 0,
+            pendingBalance: 0,
+        }
+    }
+    return {
+        safeBalance: addresses[address].safeBalance,
+        confirmedBalance: addresses[address].confirmedBalance,
+        pendingBalance: addresses[address].pendingBalance,
+    };
 function clearEmptyTransactionsData(transactions) {
     transactions.forEach(transaction => {
         clearSingleTransactionData(transaction);
@@ -46,5 +62,6 @@ module.exports = {
     isValidPubKey,
     isValidSignature,
     isValidTransactionHash,
+    getAddressBalances
     clearEmptyTransactionsData
 }
