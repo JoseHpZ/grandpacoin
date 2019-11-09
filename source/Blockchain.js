@@ -1,4 +1,4 @@
-const generateNodeId = require('../utils/functions').generateNodeId;
+const { generateNodeId, isValidAddress, isValidPubKey, isValidSignature, isValidTransactionHash } = require('../utils/functions');
 const Block = require('./Block');
 const globalConfigs = require('../global');
 const Transaction = require('./Transaction');
@@ -18,6 +18,9 @@ class Blockchain {
         this.getConfirmedTransactions = this.getConfirmedTransactions.bind(this);
         this.addBlockToChain = this.addBlockToChain.bind(this);
         this.getAddressesBalances = this.getAddressesBalances.bind(this);
+        this.getBlockByIndex = this.getBlockByIndex.bind(this);
+        this.getInfo = this.getInfo.bind(this);
+        this.debug = this.debug.bind(this);
     }
 
     initBlockchain() {
@@ -136,7 +139,7 @@ class Blockchain {
     getTransactionByHash(request, response) {
         const hash = request.params.hash;
 
-        if (!/^([A-Fa-f0-9]{64})$/.test(hash)) {
+        if (!isValidTransactionHash(hash)) {
             return response
                 .status(400)
                 .json({ message: 'Invalid transaction hash' })
@@ -158,25 +161,25 @@ class Blockchain {
     sendTransaction(request, response) {
         const { from, to, value, fee, senderPubKey, data, senderSignature } = request.body;
 
-        if (!/^([A-Fa-f0-9]{40})$/.test(from)) {
+        if (!isValidAddress(from)) {
             return response
                 .status(400)
                 .json({ message: "Invalid 'from' address" })
         }
 
-        if (!/^([A-Fa-f0-9]{40})$/.test(to)) {
+        if (!isValidAddress(to)) {
             return response
                 .status(400)
                 .json({ message: "Invalid 'to' address" })
         }
 
-        if (!/^([A-Fa-f0-9]{65})$/.test(senderPubKey)) {
+        if (!isValidPubKey(senderPubKey)) {
             return response
                 .status(400)
                 .json({ message: "Invalid sender public key" })
         }
 
-        if (!/^([A-Fa-f0-9]{64})$/.test(senderSignature)) {
+        if (!isValidSignature(senderSignature)) {
             return response
                 .status(400)
                 .json({ message: "Invalid sender signature" })
