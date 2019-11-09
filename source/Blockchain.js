@@ -2,6 +2,7 @@ const generateNodeId = require('../utils/functions').generateNodeId;
 const Block = require('./Block');
 const globalConfigs = require('../global');
 const Transaction = require('./Transaction');
+const isValidAddress = require('../utils/functions').isValidAddress;
 
 
 class Blockchain {
@@ -64,23 +65,22 @@ class Blockchain {
     }
 
     getPendingTransactions({ res }) {
-        return res
-            .status(200)
-            .json(this.pendingTransactions);
+        return res.status(200).json(this.pendingTransactions);
     }
 
     getConfirmedTransactions({ res }) {
-        return res
-            .status(200)
-            .json(this.confirmedTransactions);
+        return res.status(200).json(this.confirmedTransactions);
     }
     getMiningJob(req, res) {
+        const address = isValidAddress(req.params.minerAddress);
+        if (!address) return res.status(400).json({message: 'Invalid Address.'});
+
         const block = Block.getCandidateBlock({
             index: this.chain.length,
             prevBlockHash: this.chain[this.chain.length - 1].blockHash,
             previousDifficulty: this.chain[this.chain.length - 1].difficulty,
             pendingTransactions: this.pendingTransactions, 
-            minerAddress: req.params.minerAddress
+            minerAddress: address
         });
         const { miningJob, ...blockCandidate } = block;
         this.blockCandidates = {...this.blockCandidates, ...blockCandidate};

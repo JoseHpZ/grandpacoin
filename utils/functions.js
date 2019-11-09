@@ -9,7 +9,11 @@ function generateNodeId() {
 }
 
 function isValidAddress(address) {
-    return /^([A-Fa-f0-9]{40})$/.test(address);
+    const unprefixedAddress = address.replace(/^0x/, '');
+    if (/^([A-Fa-f0-9]{40})$/.test(unprefixedAddress))
+        return unprefixedAddress;
+    else 
+        return false;
 }
 
 function isValidPubKey(pubKey) {
