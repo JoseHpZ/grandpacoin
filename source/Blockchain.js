@@ -1,8 +1,7 @@
-const generateNodeId = require('../utils/functions').generateNodeId;
+const { generateNodeId, isValidAddress, getAddressBalances, isValidPubKey, isValidSignature } = require('../utils/functions');
 const Block = require('./Block');
 const globalConfigs = require('../global');
 const Transaction = require('./Transaction');
-const isValidAddress = require('../utils/functions').isValidAddress;
 
 
 class Blockchain {
@@ -20,7 +19,7 @@ class Blockchain {
         this.getAddressesBalances = this.getAddressesBalances.bind(this);
         this.getInfo = this.getInfo.bind(this);
         this.debug = this.debug.bind(this);
-        this.getBalancesForAddress = this.getBalancesForAddress.bind(this);
+        this.getAllBalancesForAddress = this.getAllBalancesForAddress.bind(this);
         this.listTransactionForAddress = this.listTransactionForAddress.bind(this);
         this.getMiningJob = this.getMiningJob.bind(this);
         this.blockCandidates = {};
@@ -73,18 +72,18 @@ class Blockchain {
     }
     getMiningJob(req, res) {
         const address = isValidAddress(req.params.minerAddress);
-        if (!address) return res.status(400).json({message: 'Invalid Address.'});
+        if (!address) return res.status(400).json({ message: 'Invalid Address.' });
 
         const block = Block.getCandidateBlock({
             index: this.chain.length,
             prevBlockHash: this.chain[this.chain.length - 1].blockHash,
             previousDifficulty: this.chain[this.chain.length - 1].difficulty,
-            pendingTransactions: this.pendingTransactions, 
+            pendingTransactions: this.pendingTransactions,
             minerAddress: address
         });
         const { miningJob, ...blockCandidate } = block;
-        this.blockCandidates = {...this.blockCandidates, ...blockCandidate};
-        
+        this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
+
         return res.status(200).json(miningJob);
     }
 
@@ -162,15 +161,19 @@ class Blockchain {
     }
 
     sendTransaction(request, response) {
-        const { from, to, value, fee, senderPubKey, data, senderSignature } = request.body;
+        const { value, fee, senderPubKey, data, senderSignature } = request.body;
+        let { from, to } = request.body;
 
-        if (!isValidAddress(from)) {
+        from = isValidAddress(from);
+        to = isValidAddress(to);
+
+        if (!from) {
             return response
                 .status(400)
                 .json({ message: "Invalid 'from' address" })
         }
 
-        if (!isValidAddress(to)) {
+        if (!to) {
             return response
                 .status(400)
                 .json({ message: "Invalid 'to' address" })
@@ -187,6 +190,20 @@ class Blockchain {
                 .status(400)
                 .json({ message: "Invalid sender signature" })
         }
+
+        const senderAddressBalances = getAddressBalances(from, this.addresses);
+
+        if (senderAddressBalances.message) {
+            return response
+                .status(404)
+                .json(addressBalance)
+        }
+
+        // if (senderAddressBalances.safeBalance <= (value + fee)) {
+        //     return response
+        //         .status(500)
+        //         .json({ message: "Balance is not enough to generate transaction" });
+        // }
 
         this.pendingTransactions.push(Transaction(from, to, value, fee, senderPubKey, data, senderSignature).data)
 
@@ -212,25 +229,18 @@ class Blockchain {
         return response.json({})
     }
 
-    getBalancesForAddress({ params: { address }, res }) {
-        console.log(address)
-        if (!isValidAddress(address) || !this.addresses[address]) {
-            return res
-                .status(404)
-                .json({ message: 'Invalid address, or does not exists.' });
+    getAllBalancesForAddress({ params: { address }, res }) {
+        const addressBalance = getAddressBalances(address, this.addresses);
+
+        if (addressBalance.message) {
+            return response
+                .status(400)
+                .json(addressBalance)
         }
-        if (!this.addresses[address].transactions) {
-            return res.json({
-                safeBalance: 0,
-                confirmedBalance: 0,
-                pendingBalance: 0,
-            })
-        }
-        return res.json({
-            safeBalance: this.addresses[address].safeBalance,
-            confirmedBalance: this.addresses[address].confirmedBalance,
-            pendingBalance: this.addresses[address].pendingBalance,
-        });
+
+        return res
+            .status(200)
+            .json(addressBalance);
     }
 
     listTransactionForAddress({ params: { address } }, response) {

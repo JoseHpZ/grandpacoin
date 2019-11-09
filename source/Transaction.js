@@ -8,6 +8,7 @@ const TRANSACTION_STATUS = {
 function Transaction(_from, _to, _value, _fee, _senderPubKey, _data, _senderSignature) {
     var _dateCreated = new Date().toISOString();
     var _transactionDataHash = null;
+    var _trimmedData = _data.trim();
 
     class SingleTransaction {
         constructor() {
@@ -17,7 +18,7 @@ function Transaction(_from, _to, _value, _fee, _senderPubKey, _data, _senderSign
                 _value,
                 _fee,
                 _dateCreated,
-                _data,
+                _trimmedData,
                 _senderPubKey,
             }));
         }
@@ -29,7 +30,7 @@ function Transaction(_from, _to, _value, _fee, _senderPubKey, _data, _senderSign
                 value: _value,
                 fee: _fee,
                 dateCreated: _dateCreated,
-                data: _data,
+                data: _trimmedData,
                 senderPubKey: _senderPubKey,
                 transactionDataHash: _transactionDataHash,
                 senderSignature: _senderSignature,
