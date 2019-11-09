@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const clearEmptyTransactionsData = require('../utils/functions').clearEmptyTransactionsData;
 
     class Block {
         static getBlockHash(blockObject) {
@@ -28,8 +29,8 @@ const crypto = require('crypto');
                 blockHash: Block.getBlockHash({blockDataHash, nonce: 0, dateCreated})
             }
         }
-        static getCandidateBlock(params = {index, prevBlockHash, previousDifficulty, pendingTransactions, minerAddress}) {
-            const { index, prevBlockHash, previousDifficulty, pendingTransactions: transactions, minerAddress, dateCreated, nonce } = params;
+        static getCandidateBlock({index, prevBlockHash, previousDifficulty, pendingTransactions: transactions, minerAddress}) {
+            transactions = clearEmptyTransactionsData(transactions);
             const blockDataHash = Block.getBlockHash({index, transactions, previousDifficulty, prevBlockHash, minerAddress});
             return {
                 miningJob: {

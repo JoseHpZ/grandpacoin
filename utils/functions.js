@@ -28,10 +28,23 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
+function clearEmptyTransactionsData(transactions) {
+    transactions.forEach(transaction => {
+        clearSingleTransactionData(transaction);
+    });
+    return transactions;
+}
+function clearSingleTransactionData(transaction) {
+    if (Object.keys(transaction).includes('data') && transaction.data.trim() === '') {
+        delete transaction.data;
+    }
+}
+
 module.exports = {
     generateNodeId,
     isValidAddress,
     isValidPubKey,
     isValidSignature,
-    isValidTransactionHash
+    isValidTransactionHash,
+    clearEmptyTransactionsData
 }
