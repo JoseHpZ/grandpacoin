@@ -161,11 +161,12 @@ class Blockchain {
     }
 
     sendTransaction(request, response) {
-        const { value, fee, senderPubKey, data, senderSignature } = request.body;
-        let { from, to } = request.body;
+        let { from, to, value, fee, senderPubKey, data, senderSignature } = request.body;
 
         from = isValidAddress(from);
         to = isValidAddress(to);
+        value = parseInt(value, 10);
+        fee = parseInt(fee, 10);
 
         if (!from) {
             return response
@@ -185,11 +186,25 @@ class Blockchain {
                 .json({ message: "Invalid sender public key" })
         }
 
-        if (!isValidSignature(senderSignature)) {
+        if (!isValidSignature(senderSignature[1])
+            || !isValidSignature(senderSignature[0])) {
             return response
                 .status(400)
                 .json({ message: "Invalid sender signature" })
         }
+
+        if (fee <= 10) {
+            return response
+                .status(400)
+                .json({ message: "Fee must be greater than or equal to 10" })
+        }
+
+        if (value < 0) {
+            return response
+                .status(400)
+                .json({ message: "Value must be greater than or equal to 0" })
+        }
+
 
         const senderAddressBalances = getAddressBalances(from, this.addresses);
 
@@ -205,7 +220,6 @@ class Blockchain {
                 .json({ message: "Balance is not enough to generate transaction" });
         }
 
-        this.pendingTransactions.push(Transaction(from, to, value, fee, senderPubKey, data, senderSignature).data)
         this.pendingTransactions.push(new Transaction({
             from,
             to,
@@ -213,8 +227,8 @@ class Blockchain {
             fee,
             senderPubKey,
             data,
-            senderSignature: senderSignature[1]
-        }))
+            senderSignature
+        }).getData());
 
         return response
             .status(200)
