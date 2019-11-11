@@ -9,7 +9,11 @@ function generateNodeId() {
 }
 
 function isValidAddress(address) {
-    return /^([A-Fa-f0-9]{40})$/.test(address);
+    const unprefixedAddress = address.replace(/^0x/, '');
+    if (/^([A-Fa-f0-9]{40})$/.test(unprefixedAddress))
+        return unprefixedAddress;
+    else
+        return false;
 }
 
 function isValidPubKey(pubKey) {
@@ -24,10 +28,43 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
+function getAddressBalances(address, addresses) {
+    if (!isValidAddress(address)) {
+        return { message: 'Invalid address, or does not exists.' };
+    }
+    if (!addresses[address]) {
+        return {
+            safeBalance: 0,
+            confirmedBalance: 0,
+            pendingBalance: 0,
+        }
+    }
+    return {
+        safeBalance: addresses[address].safeBalance,
+        confirmedBalance: addresses[address].confirmedBalance,
+        pendingBalance: addresses[address].pendingBalance,
+    };
+}
+
+function clearEmptyTransactionsData(transactions) {
+    transactions.forEach(transaction => {
+        clearSingleTransactionData(transaction);
+    });
+    return transactions;
+}
+
+function clearSingleTransactionData(transaction) {
+    if (Object.keys(transaction).includes('data') && transaction.data.trim() === '') {
+        delete transaction.data;
+    }
+}
+
 module.exports = {
     generateNodeId,
     isValidAddress,
     isValidPubKey,
     isValidSignature,
-    isValidTransactionHash
+    isValidTransactionHash,
+    getAddressBalances,
+    clearEmptyTransactionsData,
 }
