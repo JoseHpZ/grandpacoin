@@ -5,52 +5,73 @@ const TRANSACTION_STATUS = {
     'confirmed': 'confirmed',
 };
 
-function Transaction({ from, to, value, fee, senderPubKey, data, senderSignature }) {
-    let dateCreated = new Date().toISOString();
+class Transaction {
+    constructor({ from, to, value, fee, senderPubKey, data, senderSignature, minedInBlockIndex }) {
+        this.from = from;
+        this.to = to;
+        this.value = value;
+        this.fee = fee;
+        this.senderPubKey = senderPubKey;
+        this.data = data.trim();
+        this.senderSignature = senderSignature;
+        this.dateCreated = new Date().toISOString();
+        this.minedInBlockIndex = minedInBlockIndex;
 
-    class SingleTransaction {
-        constructor() {
-            this.from = from;
-            this.to = to;
-            this.value = value;
-            this.fee = fee;
-            this.senderPubKey = senderPubKey;
-            this.data = data.trim();
-            this.senderSignature = senderSignature;
+    }
 
-            this.getTransactionDataHash = this.getTransactionDataHash.bind(this);
-        }
+    getData() {
+        const { from, to, value, fee, data, dateCreated, senderPubKey, senderSignature } = this;
 
-        getData() {
-            const { from, to, value, fee, data, senderPubKey } = this;
 
-            return {
-                from,
-                to,
-                value,
-                fee,
-                dateCreated,
-                ...Object.assign({}, data ? { data } : {}),
-                senderPubKey,
-                transactionDataHash: this.getTransactionDataHash(),
-                senderSignature
-            }
-        }
-
-        getTransactionDataHash({ from, to, value, fee, data, senderPubKey } = this) {
-            return sha256(JSON.stringify({
-                from,
-                to,
-                value,
-                fee,
-                dateCreated,
-                ...Object.assign({}, data ? { data } : {}),
-                senderPubKey,
-            }))
+        return {
+            from,
+            to,
+            value,
+            fee,
+            dateCreated: dateCreated,
+            ...Object.assign({}, data ? { data } : {}),
+            senderPubKey,
+            transactionDataHash: Transaction.getTransactionDataHash(this),
+            senderSignature
         }
     }
 
-    return new SingleTransaction().getData();
+    static getTransactionDataHash({ from, to, value, fee, data, dateCreated, senderPubKey }) {
+        return sha256(JSON.stringify({
+            from,
+            to,
+            value,
+            fee,
+            dateCreated,
+            ...Object.assign({}, data ? { data } : {}),
+            senderPubKey,
+        }))
+    }
+
+    static getCoinbaseTransaction({ to, value, fee, data, minedInBlockIndex }) {
+        const from = '0000000000000000000000000000000000000000',
+            senderPubKey = '00000000000000000000000000000000000000000000000000000000000000000',
+            senderSignature = [
+                '0000000000000000000000000000000000000000000000000000000000000000',
+                '0000000000000000000000000000000000000000000000000000000000000000'
+            ],
+            dateCreated = new Date().toISOString();
+
+        return {
+            from,
+            to,
+            value,
+            fee,
+            dateCreated: dateCreated,
+            ...Object.assign({}, data ? { data: data.trim() } : {}),
+            senderPubKey,
+            transactionDataHash: Transaction.getTransactionDataHash({
+                to, value, fee, data: data.trim(), minedInBlockIndex, from, senderPubKey, senderSignature, dateCreated
+            }),
+            senderSignature,
+            minedInBlockIndex
+        }
+    }
 }
 
 module.exports = Transaction;
