@@ -59,6 +59,12 @@ function clearSingleTransactionData(transaction) {
     }
 }
 
+function filterValidTransactions(transactions, addresses) {
+    return transactions.filter(transaction => 
+        addresses[transactions.from].safeBalance >= (transaction.value + transaction.fee)
+    )
+}
+
 module.exports = {
     generateNodeId,
     isValidAddress,
@@ -67,4 +73,5 @@ module.exports = {
     isValidTransactionHash,
     getAddressBalances,
     clearEmptyTransactionsData,
+    filterValidTransactions,
 }

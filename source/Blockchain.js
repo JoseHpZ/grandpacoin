@@ -2,6 +2,7 @@ const { generateNodeId, isValidAddress, getAddressBalances, isValidPubKey, isVal
 const Block = require('./Block');
 const globalConfigs = require('../global');
 const Transaction = require('./Transaction');
+const BigNumber = require('bignumber.js');
 
 
 class Blockchain {
@@ -27,18 +28,17 @@ class Blockchain {
 
     initBlockchain() {
         this.chain = [];
-        this.pendingTransactions = [];
         this.confirmedTransactions = [];
+        this.confirmedTransactionsData = {}; // to store transactions history
+        this.pendingTransactions = [];
         this.currentDifficulty = globalConfigs.initialDifficulty;
-        this.cumulativeDifficulty = 0;
-        this.addresses = [];
+        this.addresses = {};
+        this.addressesIds = []; 
         this.nodes = [];
         this.peers = [];
         this.nodeId = generateNodeId();
         this.chain.push(Block.getGenesisBlock());
-        this.getBlockByIndex = this.getBlockByIndex.bind(this);
-        this.getInfo = this.getInfo.bind(this);
-        this.debug = this.debug.bind(this);
+        this.chain.push(Block.getGenesisBlock());
     }
 
     getBlockByIndex(req, response) {
@@ -96,7 +96,7 @@ class Blockchain {
             nodeUrl: req.protocol + '://' + req.get('host'),
             currentDifficult: this.currentDifficulty,
             blocksCount: this.chain.length,
-            cumulativeDifficulty: this.cumulativeDifficulty,
+            cumulativeDifficulty: this.getcumulativeDifficult(),
             confirmedTransactions: this.confirmedTransactions.length,
             pendingTransactions: this.pendingTransactions.length,
         });
@@ -111,7 +111,7 @@ class Blockchain {
             transactions: this.confirmedTransactions,
             currentDifficult: this.currentDifficulty,
             blocksCount: this.chain.length,
-            cumulativeDifficulty: this.cumulativeDifficulty,
+            cumulativeDifficulty: this.getcumulativeDifficult(),
             confirmedTransactions: this.confirmedTransactions.length,
             pendingTransactions: this.pendingTransactions.length,
             chain: {
@@ -205,7 +205,6 @@ class Blockchain {
                 .json({ message: "Balance is not enough to generate transaction" });
         }
 
-        this.pendingTransactions.push(Transaction(from, to, value, fee, senderPubKey, data, senderSignature).data)
         this.pendingTransactions.push(new Transaction({
             from,
             to,
@@ -263,6 +262,18 @@ class Blockchain {
         }
 
         return response.json({ address, transactions });
+    }
+
+    getcumulativeDifficult() {
+        console.log('chain: ', this.chain)
+        return this.chain.reduce((cumulativeDifficulty, block) => {
+            console.log('block: ', block)
+            console.log('cumulativeDifficulty: ', cumulativeDifficulty)
+            return new BigNumber(16)
+                .exponentiatedBy(block.difficulty)
+                .plus(cumulativeDifficulty)
+                .toString()
+        }, "0");
     }
 
 }
