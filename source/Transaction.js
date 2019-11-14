@@ -48,14 +48,15 @@ class Transaction {
         }))
     }
 
-    static getCoinbaseTransaction({ to, value, fee, data, minedInBlockIndex }) {
+    static getCoinbaseTransaction({ to, value, data, minedInBlockIndex }) {
         const from = '0000000000000000000000000000000000000000',
             senderPubKey = '00000000000000000000000000000000000000000000000000000000000000000',
             senderSignature = [
                 '0000000000000000000000000000000000000000000000000000000000000000',
                 '0000000000000000000000000000000000000000000000000000000000000000'
             ],
-            dateCreated = new Date().toISOString();
+            dateCreated = new Date().toISOString(),
+            fee = 0;
 
         return {
             from,
