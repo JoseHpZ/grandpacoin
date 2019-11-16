@@ -46,11 +46,16 @@ function getAddressBalances(address, addresses) {
     };
 }
 
-function clearEmptyTransactionsData(transactions) {
+function processBlockTransactions(transactions) {
+    let acumulatedFees = 0;
     transactions.forEach(transaction => {
         clearSingleTransactionData(transaction);
+        acumulatedFees += transaction.fee
     });
-    return transactions;
+    return {
+        transactions,
+        acumulatedFees
+    };
 }
 
 function clearSingleTransactionData(transaction) {
@@ -66,5 +71,6 @@ module.exports = {
     isValidSignature,
     isValidTransactionHash,
     getAddressBalances,
-    clearEmptyTransactionsData,
+    processBlockTransactions,
+    clearSingleTransactionData
 }
