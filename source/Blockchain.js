@@ -51,6 +51,7 @@ class Blockchain {
         this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.getInfo = this.getInfo.bind(this);
         this.debug = this.debug.bind(this);
+        this.blockNumber = 0;
     }
 
     getBlockByIndex(req, response) {
@@ -89,10 +90,10 @@ class Blockchain {
         const block = Block.getCandidateBlock({
             index: this.chain.length,
             prevBlockHash: this.chain[this.chain.length - 1].blockHash,
-            previousDifficulty: this.currentDifficulty,
-            // pendingTransactions: this.pendingTransactions,
-            pendingTransactions: [this.testingTransaction, this.testingTransaction],
-            minerAddress: address
+            difficulty: this.currentDifficulty,
+            transactions: this.pendingTransactions,
+            // transactions: [this.testingTransaction, this.testingTransaction],
+            minedBy: address
         });
         const { miningJob, ...blockCandidate } = block;
         this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
@@ -100,8 +101,24 @@ class Blockchain {
         return res.status(200).json(miningJob);
     }
     getSubmittedBlock(req, res) {
-        console.log(this.blockCandidates[req.body.blockDataHash])
-        return res.status(200).json(req.body);
+        const { blockHash, blockDataHash, ...blockHeader } = req.body;
+        const blockCandidate = this.blockCandidates[blockDataHash];
+
+        if (!blockCandidate) return res.status(404).json('Block not found or Block already mined.');
+
+        const newBlock = Block.getBlockObject({
+            ...blockCandidate,
+            ...blockHeader
+        });
+
+        if (newBlock.blockHash === blockHash) {
+            this.chain.push(newBlock);
+            this.blockCandidates = {};
+
+            return res.status(200).json({'message': 'Block accepted', blockNumber: this.blockNumber += 1})
+        } else {
+            return res.status(404).json('ASDASD')
+        }
     }
 
     getInfo(req, res) {
