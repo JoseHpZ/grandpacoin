@@ -11,27 +11,18 @@ class Block {
     }
     static getGenesisBlock() {
         const dateCreated = '2019-11-09T01:05:06.705Z';
-        const blockDataHash = Block.getBlockHash({
-            index: 0, 
-            transactions: [], 
-            difficulty: 0, 
-            prevBlockHash: '0', 
-            minedBy: '00000000000000000000000000000000'
-        });
-        
-        return {
+        return Block.getBlockObject({
             index: 0,
             transactions: [],
             difficulty: 0,
             prevBlockHash: '0',
             minedBy: '00000000000000000000000000000000',
-            blockDataHash,
             nonce: 0,
             dateCreated,
-            blockHash: Block.getBlockHash({blockDataHash, nonce: 0, dateCreated})
-        }
+            minerAddress: '00000000000000000000000000000000'
+        });
     }
-    static getCandidateBlock({index, prevBlockHash, previousDifficulty: difficulty, pendingTransactions: transactions, minerAddress: minedBy}) {
+    static getCandidateBlock({index, prevBlockHash, difficulty, transactions, minedBy}) {
         const processedTransactions = processBlockTransactions(transactions);
         const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value: processedTransactions.acumulatedFees, data: 'coinbase tx', minedInBlockIndex: index});
         clearSingleTransactionData(coinbaseTransaction);
@@ -52,24 +43,30 @@ class Block {
                 transactions,
                 difficulty,
                 prevBlockHash: prevBlockHash,
-                minedBy: minedBy,
+                minedBy,
                 blockDataHash
             }
         }
     }
-
-    constructor({}) {
-        this.index = index;
-        this.difficulty = previousDifficulty;
-        this.prevBlockHash = prevBlockHash;
-        this.pendingTransactions = pendingTransactions;
-        this.dateCreated = dateCreated;
-        this.nonce = nonce;
-        // this.minedBy = minedBy;
-        this.createBlock = this.createBlock.bind(this);
-    }
-    createBlock() {
-
+    static getBlockObject({index, transactions, difficulty, prevBlockHash, minedBy, nonce, dateCreated}) {
+        const blockDataHash = Block.getBlockHash({
+            index,
+            transactions,
+            difficulty,
+            prevBlockHash,
+            minedBy
+        });
+        return {
+            index,
+            transactions,
+            difficulty,
+            prevBlockHash,
+            minedBy,
+            blockDataHash,
+            dateCreated,
+            nonce,
+            blockHash: Block.getBlockHash({blockDataHash, dateCreated, nonce})
+        }
     }
     
 }
