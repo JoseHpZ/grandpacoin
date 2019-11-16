@@ -32,8 +32,7 @@ module.exports = (app) => {
     // Peers routes
     app.get('/peers', function (req, res) {
     })
-    app.post('/peers/connect', function (req, res) {
-    })
+    app.post('/peers/connect', blockchain.connectPeer)
     app.post('/peers/notify-new-block', function (req, res) {
     })
 

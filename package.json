@@ -6,6 +6,7 @@
   "dependencies": {
     "bignumber.js": "^9.0.0",
     "express": "^4.17.1",
+    "ip": "^1.1.5",
     "moment": "^2.24.0",
     "nodemon": "^1.19.4",
     "uuid": "^3.3.3"

@@ -1,14 +1,20 @@
-const { generateNodeId, isValidAddress, getAddressBalances, isValidPubKey, isValidSignature } = require('../utils/functions');
+const {
+    generateNodeId,
+    isValidAddress,
+    getAddressBalances,
+    isValidPubKey,
+    isValidSignature,
+    getNodeOwnIp
+} = require('../utils/functions');
 const Block = require('./Block');
 const globalConfigs = require('../global');
 const Transaction = require('./Transaction');
 const BigNumber = require('bignumber.js');
-
+const Request = require('./../utils/Request');
+const Url = require('url')
 
 class Blockchain {
     constructor() {
-        this.nodeId = generateNodeId();
-        this.peers = [];
         this.initBlockchain();
         this.getBlockByIndex = this.getBlockByIndex.bind(this);
         this.resetChain = this.resetChain.bind(this);
@@ -36,6 +42,8 @@ class Blockchain {
             "transactionDataHash": "479d1871b3ab10a753ffd1da282c4b04a7798135100915602bdddfdea1f381f7",
             "senderSignature": "620e0693630e9156ac33fdc8f1b8139e65473aea7066d8098c732121ab14f9a2"
         }`);
+        this.connectPeer = this.connectPeer.bind(this);
+        this.blockCandidates = {};
     }
 
     initBlockchain() {
@@ -45,9 +53,10 @@ class Blockchain {
         this.pendingTransactions = [];
         this.currentDifficulty = globalConfigs.initialDifficulty;
         this.addresses = {};
-        this.addressesIds = []; 
+        this.addressesIds = [];
         this.nodes = [];
-        this.peers = [];
+        this.peers = {};
+        this.cumulativeDifficulty = 0;
         this.nodeId = generateNodeId();
         this.chain.push(Block.getGenesisBlock());
         this.chain.push(Block.getGenesisBlock());
@@ -308,6 +317,37 @@ class Blockchain {
         }, "0");
     }
 
+    async connectPeer(request, response) {
+        const { peerUrl } = request.body;
+        const { peers, nodeId } = this;
+        try {
+            let remoteNodeInfo = await Request.get(`${peerUrl}/info`);
+            if (remoteNodeInfo.nodeId === nodeId) {
+                return response.status(400).send({ message: 'Invalid peer url to connect' })
+            }
+            if (peers[remoteNodeInfo.nodeId]) {
+                return response.status(409).send({ message: `Already connected to peer: ${peerUrl}` });
+            }
+            peers[remoteNodeInfo.nodeId] = peerUrl;
+            const remoteUrl = Url.parse(peerUrl);
+            await Request.post('/peers/connect', {
+                hostname: remoteUrl.hostname,
+                port: remoteUrl.port,
+                body: {
+                    peerUrl: getNodeOwnIp().peerUrl
+                }
+            })
+            console.log('\x1b[46m%s\x1b[0m', `Connected to peer ${peerUrl}`);
+            return response.send({ message: `Connected to peer: ${peerUrl}` });
+        } catch (error) {
+            if (error.message) {
+                console.log('\x1b[46m%s\x1b[0m', `Connected to peer ${peerUrl}`);
+                return response.send({ message: `Connected to peer: ${peerUrl}` });
+            }
+            console.log('\x1b[46m%s\x1b[0m', `Connection to peer ${peerUrl} failed`);
+            return response.send({ message: `Connected to peer: ${peerUrl}` });
+        }
+    }
 }
 
 module.exports = Blockchain;
