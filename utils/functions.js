@@ -9,6 +9,8 @@ function generateNodeId() {
 }
 
 function isValidAddress(address) {
+    if (!address)
+        return false;
     const unprefixedAddress = address.replace(/^0x/, '');
     if (/^([A-Fa-f0-9]{40})$/.test(unprefixedAddress))
         return unprefixedAddress;
@@ -78,7 +80,6 @@ module.exports = {
     isValidTransactionHash,
     getAddressBalances,
     processBlockTransactions,
-    clearSingleTransactionData
+    clearSingleTransactionData,
     filterValidTransactions,
-    clearEmptyTransactionsData,
 }
