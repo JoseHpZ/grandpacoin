@@ -1,3 +1,6 @@
+require('./global');
+global.initialConfig = 'patoson';
+console.log(global.initialConfig)
 const express = require('express');
 const app = express();
 const routes = require('./source/routes.js');
@@ -10,5 +13,6 @@ app.listen(PORT, function () {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(router);
+
 routes(router);
 

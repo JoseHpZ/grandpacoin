@@ -49,16 +49,12 @@ function getAddressBalances(address, addresses) {
     };
 }
 
-function processBlockTransactions(transactions) {
+function getMinerReward(transactions) {
     let acumulatedFees = 0;
     transactions.forEach(transaction => {
-        clearSingleTransactionData(transaction);
         acumulatedFees += transaction.fee
     });
-    return {
-        transactions,
-        acumulatedFees
-    };
+    return acumulatedFees;
 }
 
 function clearSingleTransactionData(transaction) {
@@ -91,7 +87,7 @@ module.exports = {
     isValidTransactionHash,
     getAddressBalances,
     filterValidTransactions,
-    processBlockTransactions,
+    getMinerReward,
     getNodeOwnIp,
     clearSingleTransactionData,
 }

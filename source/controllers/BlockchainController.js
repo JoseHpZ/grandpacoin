@@ -1,6 +1,4 @@
 const blockChain = require('../models/Blockchain');
-const { appName, coins } = require('../../global');
-
 
 class BlockchainController {
     static resetChain({ res }) {
@@ -12,7 +10,7 @@ class BlockchainController {
     
     static getInfo(req, res) {
         return res.json({
-            about: appName,
+            about: global.appName,
             nodeId: blockChain.nodeId,
             peers: blockChain.peers,
             chainId: blockChain.chain[0].blockHash,
@@ -29,7 +27,7 @@ class BlockchainController {
         return res.json({
             selfUrl: req.protocol + '://' + req.get('host'),
             nodeId: blockChain.nodeId,
-            coins: coins,
+            coins: global.coins,
             peers: blockChain.peers,
             transactions: blockChain.confirmedTransactions,
             currentDifficult: blockChain.currentDifficulty,
