@@ -1,6 +1,5 @@
 const { generateNodeId } = require('../../utils/functions');
 const Block = require('./Block');
-const { initialDifficulty } = require('../../global');
 const BigNumber = require('bignumber.js');
 
 
@@ -16,7 +15,7 @@ class Blockchain {
         this.confirmedTransactions = [];
         this.confirmedTransactionsData = {}; // to store transactions history
         this.pendingTransactions = [];
-        this.currentDifficulty = initialDifficulty;
+        this.currentDifficulty = global.initialDifficulty;
         this.addresses = {};
         this.addressesIds = []; 
         this.nodes = [];
@@ -29,12 +28,11 @@ class Blockchain {
 
     getTransactionByHash(hash) {
         let transaction = this.pendingTransactions.find(txn => txn.transactionDataHash === hash)
-        if (transaction)
-            return transaction;
-        for (let i = 0; i < this.chain.length; i += 1) {
-            transaction = this.chain[i].transactions.find(txn => txn.transactionDataHash === hash)
-            if (transaction)
-                break;
+        if (!transaction) {
+            for (const block of this.chain) {
+                transaction = block.transactions.find(txn => txn.transactionDataHash === hash)
+                if (transaction) break;
+            }
         }
         return transaction;
     }
@@ -46,6 +44,19 @@ class Blockchain {
                 .plus(cumulativeDifficulty)
                 .toString()
         }, "0");
+    }
+
+    addBlock(newBlock) {
+        this.chain.push(newBlock);
+        this.blockCandidates = {};
+    }
+
+    getBlockCandidate(blockDataHash) {
+        return this.blockCandidates[blockDataHash];
+    }
+
+    storeBlockCandidate(blockCandidate) {
+        this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
     }
 
 }

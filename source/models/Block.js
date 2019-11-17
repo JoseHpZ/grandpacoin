@@ -1,7 +1,7 @@
 const { isValidAddress } = require('../../utils/functions');
 const crypto = require('crypto');
 const Transaction = require('./Transaction');
-const { clearSingleTransactionData, processBlockTransactions } = require('../../utils/functions');
+const { clearSingleTransactionData, getMinerReward } = require('../../utils/functions');
 
 class Block {
     static getBlockHash(blockObject) {
@@ -22,19 +22,20 @@ class Block {
             minerAddress: '00000000000000000000000000000000'
         });
     }
-    static getCandidateBlock({index, prevBlockHash, difficulty, transactions, minedBy}) {
-        const processedTransactions = processBlockTransactions(transactions);
-        const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value: processedTransactions.acumulatedFees, data: 'coinbase tx', minedInBlockIndex: index});
+    static getCandidateBlock({index, prevBlockHash, difficulty, transactions: pendingTransactions, minedBy}) {
+        const transactions = [...pendingTransactions];
+        const minerReward = getMinerReward(transactions);
+        const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value: minerReward, data: 'coinbase tx', minedInBlockIndex: index});
         clearSingleTransactionData(coinbaseTransaction);
-        processedTransactions.transactions.unshift(coinbaseTransaction);
+        transactions.unshift(coinbaseTransaction);
 
-        const blockDataHash = Block.getBlockHash({index, transactions: processedTransactions.transactions, difficulty, prevBlockHash, minedBy});
+        const blockDataHash = Block.getBlockHash({index, transactions: transactions, difficulty, prevBlockHash, minedBy});
         return {
             miningJob: {
                 index,
                 transactionsIncluded: transactions.length,
                 difficulty,
-                expectedReward: 5000000 + processedTransactions.acumulatedFees,
+                expectedReward: global.blockReward + minerReward,
                 rewardAddress: minedBy,
                 blockDataHash
             },

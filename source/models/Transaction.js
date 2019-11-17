@@ -57,17 +57,25 @@ class Transaction {
             ],
             dateCreated = new Date().toISOString(),
             fee = 0;
-
+        data = data.trim();
         return {
             from,
             to,
             value,
             fee,
             dateCreated: dateCreated,
-            ...Object.assign({}, data ? { data: data.trim() } : {}),
+            ...Object.assign({}, data ? { data } : {}),
             senderPubKey,
             transactionDataHash: Transaction.getTransactionDataHash({
-                to, value, fee, data: data.trim(), minedInBlockIndex, from, senderPubKey, senderSignature, dateCreated
+                to, 
+                value, 
+                fee, 
+                ...Object.assign({}, data ? { data } : {}),
+                minedInBlockIndex, 
+                from, 
+                senderPubKey, 
+                senderSignature, 
+                dateCreated
             }),
             senderSignature,
             minedInBlockIndex
