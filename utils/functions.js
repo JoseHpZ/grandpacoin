@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const uuidv4 = require('uuid/v4');
+const ip = require('ip');
 
 function generateNodeId() {
     return crypto
@@ -9,6 +10,8 @@ function generateNodeId() {
 }
 
 function isValidAddress(address) {
+    if (!address)
+        return false;
     const unprefixedAddress = address.replace(/^0x/, '');
     if (/^([A-Fa-f0-9]{40})$/.test(unprefixedAddress))
         return unprefixedAddress;
@@ -64,6 +67,22 @@ function clearSingleTransactionData(transaction) {
     }
 }
 
+function filterValidTransactions(transactions, addresses) {
+    return transactions.filter(transaction =>
+        addresses[transactions.from].safeBalance >= (transaction.value + transaction.fee)
+    )
+}
+
+function getNodeOwnIp() {
+    const port = process.env.PORT || 5555;
+    const host = ip.address();
+    return {
+        peerUrl: `http://${host}:${port}`,
+        host,
+        port
+    };
+}
+
 module.exports = {
     generateNodeId,
     isValidAddress,
@@ -71,6 +90,8 @@ module.exports = {
     isValidSignature,
     isValidTransactionHash,
     getAddressBalances,
+    filterValidTransactions,
     processBlockTransactions,
-    clearSingleTransactionData
+    getNodeOwnIp,
+    clearSingleTransactionData,
 }

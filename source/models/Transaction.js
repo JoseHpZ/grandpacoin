@@ -1,4 +1,4 @@
-const { sha256 } = require('../utils/hashes');
+const { sha256 } = require('../../utils/hashes');
 
 const TRANSACTION_STATUS = {
     'pending': 'pending',

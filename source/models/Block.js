@@ -1,7 +1,7 @@
+const { isValidAddress } = require('../../utils/functions');
 const crypto = require('crypto');
-const processBlockTransactions = require('../utils/functions').processBlockTransactions;
 const Transaction = require('./Transaction');
-const clearSingleTransactionData = require('../utils/functions').clearSingleTransactionData;
+const { clearSingleTransactionData, processBlockTransactions } = require('../../utils/functions');
 
 class Block {
     static getBlockHash(blockObject) {
@@ -68,7 +68,6 @@ class Block {
             blockHash: Block.getBlockHash({blockDataHash, dateCreated, nonce})
         }
     }
-    
 }
 
 module.exports = Block;
