@@ -92,6 +92,6 @@ module.exports = {
     getAddressBalances,
     filterValidTransactions,
     processBlockTransactions,
-    getNodeOwnIp
+    getNodeOwnIp,
     clearSingleTransactionData,
 }

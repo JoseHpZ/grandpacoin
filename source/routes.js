@@ -2,6 +2,7 @@ const BlockchainController = require('./controllers/BlockchainController');
 const BlockController = require('./controllers/BlockController');
 const TransactionController = require('./controllers/TransactionController');
 const BalanceController = require('./controllers/BalanceController');
+const PeersController = require('./controllers/PeersController');
 
 
 module.exports = (router) => {
@@ -12,7 +13,7 @@ module.exports = (router) => {
     // router.get('/debug/mine/:minerAddress/:difficulty', function (req, res) {
     // });
 
-    // // Transaction routes
+    // Transaction routes
     router.get('/transactions/pending', TransactionController.getPendingTransactions);
     router.get('/transactions/confirmed', TransactionController.getConfirmedTransactions);
     router.get('/transaction/:hash', TransactionController.getTransactionByHash);
@@ -26,22 +27,15 @@ module.exports = (router) => {
     router.post('/mining/submit-mined-block', BlockController.getSubmittedBlock);
     router.get('/blocks', BlockController.getBlocks);
     router.get('/blocks/:index', BlockController.getBlockByIndex);
-    // // Peers routes
-    // router.get('/peers', function (req, res) {
-    // })
-    // router.post('/peers/connect', function (req, res) {
-    // })
-    // router.post('/peers/notify-new-block', function (req, res) {
-    // })
-
-    app.get('/peers', function (req, res) {
+    // Peers routes
+    router.get('/peers', function (req, res) {
     })
-    app.post('/peers/connect', blockchain.connectPeer)
-    app.post('/peers/notify-new-block', function (req, res) {
+    router.post('/peers/connect', PeersController.connectPeer)
+    router.post('/peers/notify-new-block', function (req, res) {
     })
 
     // Default route
-    router.get('*', function (req, res) {
+    router.all('*', function (req, res) {
         res.status(404).json({ message: 'This route does not exists.' })
     })
 }
