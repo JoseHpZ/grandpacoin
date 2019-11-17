@@ -34,6 +34,12 @@ module.exports = (router) => {
     // router.post('/peers/notify-new-block', function (req, res) {
     // })
 
+    app.get('/peers', function (req, res) {
+    })
+    app.post('/peers/connect', blockchain.connectPeer)
+    app.post('/peers/notify-new-block', function (req, res) {
+    })
+
     // Default route
     router.get('*', function (req, res) {
         res.status(404).json({ message: 'This route does not exists.' })
