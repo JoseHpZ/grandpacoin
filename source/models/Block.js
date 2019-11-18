@@ -1,9 +1,10 @@
 const crypto = require('crypto');
-const processBlockTransactions = require('../utils/functions').processBlockTransactions;
 const Transaction = require('./Transaction');
-const clearSingleTransactionData = require('../utils/functions').clearSingleTransactionData;
+const { clearSingleTransactionData, getTransactionsFee } = require('../../utils/transactionFunctions');
+const BigNumber = require('bignumber.js');
+const GranpaCoin = require('../models/GrandpaCoin');
 
-class Block {
+class Block extends GranpaCoin {
     static getBlockHash(blockObject) {
         return crypto.createHash('sha256')
             .update(JSON.stringify(blockObject))
@@ -22,19 +23,20 @@ class Block {
             minerAddress: '00000000000000000000000000000000'
         });
     }
-    static getCandidateBlock({index, prevBlockHash, difficulty, transactions, minedBy}) {
-        const processedTransactions = processBlockTransactions(transactions);
-        const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value: processedTransactions.acumulatedFees, data: 'coinbase tx', minedInBlockIndex: index});
+    static getCandidateBlock({index, prevBlockHash, difficulty, transactions: pendingTransactions, minedBy}) {
+        const transactions = [...pendingTransactions];
+        const minerReward = getTransactionsFee(transactions);
+        const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value: minerReward, data: 'coinbase tx', minedInBlockIndex: index});
         clearSingleTransactionData(coinbaseTransaction);
-        processedTransactions.transactions.unshift(coinbaseTransaction);
+        transactions.unshift(coinbaseTransaction);
 
-        const blockDataHash = Block.getBlockHash({index, transactions: processedTransactions.transactions, difficulty, prevBlockHash, minedBy});
+        const blockDataHash = Block.getBlockHash({index, transactions: transactions, difficulty, prevBlockHash, minedBy});
         return {
             miningJob: {
                 index,
                 transactionsIncluded: transactions.length,
                 difficulty,
-                expectedReward: 5000000 + processedTransactions.acumulatedFees,
+                expectedReward: BigNumber(global.blockReward).plus(minerReward).toString(),
                 rewardAddress: minedBy,
                 blockDataHash
             },
@@ -44,7 +46,8 @@ class Block {
                 difficulty,
                 prevBlockHash: prevBlockHash,
                 minedBy,
-                blockDataHash
+                blockDataHash,
+                expectedReward: BigNumber(global.blockReward).plus(minerReward).toString(),
             }
         }
     }
@@ -56,7 +59,7 @@ class Block {
             prevBlockHash,
             minedBy
         });
-        return {
+        return new Block({
             index,
             transactions,
             difficulty,
@@ -66,9 +69,20 @@ class Block {
             dateCreated,
             nonce,
             blockHash: Block.getBlockHash({blockDataHash, dateCreated, nonce})
-        }
+        });
     }
-    
+    constructor({index, transactions, difficulty, prevBlockHash, minedBy, nonce, dateCreated, blockDataHash, blockHash}) {
+        super();
+        this.index = index;
+        this.transactions = transactions;
+        this.difficulty = difficulty;
+        this.prevBlockHash = prevBlockHash;
+        this.minedBy = minedBy;
+        this.blockDataHash = blockDataHash;
+        this.dateCreated = dateCreated;
+        this.nonce = nonce;
+        this.blockHash = blockHash;
+    }
 }
 
 module.exports = Block;

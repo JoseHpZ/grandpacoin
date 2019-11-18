@@ -1,4 +1,4 @@
-const { sha256 } = require('../utils/hashes');
+const { sha256 } = require('../../utils/hashes');
 
 const TRANSACTION_STATUS = {
     'pending': 'pending',
@@ -21,8 +21,6 @@ class Transaction {
 
     getData() {
         const { from, to, value, fee, data, dateCreated, senderPubKey, senderSignature } = this;
-
-
         return {
             from,
             to,
@@ -57,17 +55,25 @@ class Transaction {
             ],
             dateCreated = new Date().toISOString(),
             fee = 0;
-
+        data = data.trim();
         return {
             from,
             to,
             value,
             fee,
             dateCreated: dateCreated,
-            ...Object.assign({}, data ? { data: data.trim() } : {}),
+            ...Object.assign({}, data ? { data } : {}),
             senderPubKey,
             transactionDataHash: Transaction.getTransactionDataHash({
-                to, value, fee, data: data.trim(), minedInBlockIndex, from, senderPubKey, senderSignature, dateCreated
+                to, 
+                value, 
+                fee, 
+                ...Object.assign({}, data ? { data } : {}),
+                minedInBlockIndex, 
+                from, 
+                senderPubKey, 
+                senderSignature, 
+                dateCreated
             }),
             senderSignature,
             minedInBlockIndex

@@ -1,5 +1,7 @@
 const crypto = require('crypto');
 const uuidv4 = require('uuid/v4');
+const ip = require('ip');
+const BigNumber = require('bignumber.js');
 
 function generateNodeId() {
     return crypto
@@ -9,6 +11,8 @@ function generateNodeId() {
 }
 
 function isValidAddress(address) {
+    if (!address)
+        return false;
     const unprefixedAddress = address.replace(/^0x/, '');
     if (/^([A-Fa-f0-9]{40})$/.test(unprefixedAddress))
         return unprefixedAddress;
@@ -28,41 +32,27 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
-function getAddressBalances(address, addresses) {
-    if (!isValidAddress(address)) {
-        return { message: 'Invalid address, or does not exists.' };
+function isValidUrl(url) {
+    if (!url) return false;
+
+    if (/^(http|https)\:\/\/[a-z0-9\.-]+\.[a-z]{2,4}(\:[0-9]{1,4})?/gi.test(url)
+        || /^(http|https)\:\/\/[a-z0-9\.-]+(\:[0-9]{1,4})?/gi.test(url)
+        || /^(http|https)\:\/\/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(\:[0-9]{1,4})?/gi.test(url)) {
+        return true;
     }
-    if (!addresses[address]) {
-        return {
-            safeBalance: 0,
-            confirmedBalance: 0,
-            pendingBalance: 0,
-        }
-    }
+    return false;
+}
+
+function getNodeOwnIp() {
+    const port = process.env.PORT || 5555;
+    const host = ip.address();
     return {
-        safeBalance: addresses[address].safeBalance,
-        confirmedBalance: addresses[address].confirmedBalance,
-        pendingBalance: addresses[address].pendingBalance,
+        peerUrl: `http://${host}:${port}`,
+        host,
+        port
     };
 }
 
-function processBlockTransactions(transactions) {
-    let acumulatedFees = 0;
-    transactions.forEach(transaction => {
-        clearSingleTransactionData(transaction);
-        acumulatedFees += transaction.fee
-    });
-    return {
-        transactions,
-        acumulatedFees
-    };
-}
-
-function clearSingleTransactionData(transaction) {
-    if (Object.keys(transaction).includes('data') && transaction.data.trim() === '') {
-        delete transaction.data;
-    }
-}
 
 module.exports = {
     generateNodeId,
@@ -70,7 +60,6 @@ module.exports = {
     isValidPubKey,
     isValidSignature,
     isValidTransactionHash,
-    getAddressBalances,
-    processBlockTransactions,
-    clearSingleTransactionData
+    getNodeOwnIp,
+    isValidUrl
 }
