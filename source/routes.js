@@ -28,9 +28,8 @@ module.exports = (router) => {
     router.get('/blocks', BlockController.getBlocks);
     router.get('/blocks/:index', BlockController.getBlockByIndex);
     // Peers routes
-    router.get('/peers', function (req, res) {
-    })
-    router.post('/peers/connect', PeersController.connectPeer)
+    router.get('/peers', PeersController.getConnectedPeers);
+    router.post('/peers/connect', PeersController.connectPeer);
     router.post('/peers/notify-new-block', function (req, res) {
     })
 

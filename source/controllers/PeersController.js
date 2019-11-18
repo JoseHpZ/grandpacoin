@@ -1,12 +1,21 @@
 const { getNodeOwnIp } = require("../../utils/functions");
 const blockChain = require("../models/Blockchain");
+const Request = require("../../utils/Request");
+const Url = require("url");
 
 class PeersController {
+    static getConnectedPeers(request, response) {
+        const { peers } = blockChain;
+        return response
+            .status(200)
+            .json(peers);
+    }
+
     static async connectPeer(request, response) {
         const { peerUrl } = request.body;
         const { peers, nodeId } = blockChain;
         try {
-            let remoteNodeInfo = await Request.get(`${peerUrl}/info`);
+            const remoteNodeInfo = await Request.get(`${peerUrl}/info`);
             if (remoteNodeInfo.nodeId === nodeId) {
                 return response.status(400).send({ message: 'Invalid peer url to connect' })
             }
@@ -27,7 +36,7 @@ class PeersController {
         } catch (error) {
             if (error.message) {
                 console.log(`Connected to peer ${peerUrl}`);
-                return response.send({ message: `Connected to peer: ${peerUrl}` });
+                return response.send({ message: error.message });
             }
             console.log(`Connection to peer ${peerUrl} failed`);
             return response.send({ message: `Connected to peer: ${peerUrl}` });
