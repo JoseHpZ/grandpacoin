@@ -30,9 +30,18 @@ function hasPendingBalance(balance, amount) {
     return balance.pendingBalance < amount && balance.pendingBalance !== 0;
 }
 
+function getTransactionsFee(transactions) {
+    let acumulatedFees = BigNumber(0);
+    transactions.forEach(transaction => {
+        acumulatedFees = acumulatedFees.plus(transaction.fee)
+    });
+    return acumulatedFees.toString();
+}
+
 module.exports = {
     processBlockTransactions,
     clearSingleTransactionData,
     filterValidTransactions,
     hasFunds,
+    getTransactionsFee,
 }

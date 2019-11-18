@@ -32,14 +32,6 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
-function getTransactionsFee(transactions) {
-    let acumulatedFees = BigNumber(0);
-    transactions.forEach(transaction => {
-        acumulatedFees = acumulatedFees.plus(transaction.fee)
-    });
-    return acumulatedFees.toString();
-}
-
 function getNodeOwnIp() {
     const port = process.env.PORT || 5555;
     const host = ip.address();
@@ -57,6 +49,5 @@ module.exports = {
     isValidPubKey,
     isValidSignature,
     isValidTransactionHash,
-    getTransactionsFee,
     getNodeOwnIp,
 }
