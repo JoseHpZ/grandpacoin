@@ -40,8 +40,7 @@ class BlockController {
         if (newBlock.blockHash === blockHash) {
             blockchain.addBlock(newBlock);
             return res.status(200).json({
-                message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.', 
-                blockNumber: blockNumber += 1
+                message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
             });
         }
         
