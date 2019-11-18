@@ -6,7 +6,7 @@ const BigNumber = require('bignumber.js');
 class Blockchain {
     constructor() {
         this.nodeId = generateNodeId();
-        this.peers = [];
+        this.peers = {};
         this.initBlockchain();
     }
 
@@ -17,10 +17,7 @@ class Blockchain {
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
         this.addresses = {};
-        this.addressesIds = []; 
-        this.nodes = [];
-        this.peers = [];
-        this.nodeId = generateNodeId();
+        this.addressesIds = [];
         this.chain.push(Block.getGenesisBlock());
         this.blockNumber = 0;
         this.blockCandidates = {};
