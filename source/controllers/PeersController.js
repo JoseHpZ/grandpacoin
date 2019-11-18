@@ -1,4 +1,4 @@
-const { getNodeOwnIp } = require("../../utils/functions");
+const { getNodeOwnIp, isValidUrl } = require("../../utils/functions");
 const blockChain = require("../models/Blockchain");
 const Request = require("../../utils/Request");
 const Url = require("url");
@@ -14,6 +14,9 @@ class PeersController {
     static async connectPeer(request, response) {
         const { peerUrl } = request.body;
         const { peers, nodeId } = blockChain;
+
+        if (!isValidUrl(peerUrl)) return response.status(400).json({ message: 'Invalid Url' });
+
         try {
             const remoteNodeInfo = await Request.get(`${peerUrl}/info`);
             if (remoteNodeInfo.nodeId === nodeId) {

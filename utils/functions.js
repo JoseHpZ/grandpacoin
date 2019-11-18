@@ -32,6 +32,17 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
+function isValidUrl(url) {
+    if (!url) return false;
+
+    if (/^(http|https)\:\/\/[a-z0-9\.-]+\.[a-z]{2,4}(\:[0-9]{1,4})?/gi.test(url)
+        || /^(http|https)\:\/\/[a-z0-9\.-]+(\:[0-9]{1,4})?/gi.test(url)
+        || /^(http|https)\:\/\/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(\:[0-9]{1,4})?/gi.test(url)) {
+        return true;
+    }
+    return false;
+}
+
 function getNodeOwnIp() {
     const port = process.env.PORT || 5555;
     const host = ip.address();
@@ -50,4 +61,5 @@ module.exports = {
     isValidSignature,
     isValidTransactionHash,
     getNodeOwnIp,
+    isValidUrl
 }
