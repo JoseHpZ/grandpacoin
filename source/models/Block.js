@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const Transaction = require('./Transaction');
-const { clearSingleTransactionData, getTransactionsFee } = require('../../utils/functions');
+const { clearSingleTransactionData, getTransactionsFee } = require('../../utils/transactionFunctions');
 const BigNumber = require('bignumber.js');
 const GranpaCoin = require('../models/GrandpaCoin');
 

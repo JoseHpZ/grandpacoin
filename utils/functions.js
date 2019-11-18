@@ -32,42 +32,15 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
-function getAddressBalances(address, addresses) {
-    if (!isValidAddress(address)) {
-        return { message: 'Invalid address, or does not exists.' };
-    }
-    if (!addresses[address]) {
-        return {
-            safeBalance: 0,
-            confirmedBalance: 0,
-            pendingBalance: 0,
-        }
-    }
-    return {
-        safeBalance: addresses[address].safeBalance,
-        confirmedBalance: addresses[address].confirmedBalance,
-        pendingBalance: addresses[address].pendingBalance,
-    };
-}
+function isValidUrl(url) {
+    if (!url) return false;
 
-function getTransactionsFee(transactions) {
-    let acumulatedFees = BigNumber(0);
-    transactions.forEach(transaction => {
-        acumulatedFees = acumulatedFees.plus(transaction.fee)
-    });
-    return acumulatedFees.toString();
-}
-
-function clearSingleTransactionData(transaction) {
-    if (Object.keys(transaction).includes('data') && transaction.data.trim() === '') {
-        delete transaction.data;
+    if (/^(http|https)\:\/\/[a-z0-9\.-]+\.[a-z]{2,4}(\:[0-9]{1,4})?/gi.test(url)
+        || /^(http|https)\:\/\/[a-z0-9\.-]+(\:[0-9]{1,4})?/gi.test(url)
+        || /^(http|https)\:\/\/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(\:[0-9]{1,4})?/gi.test(url)) {
+        return true;
     }
-}
-
-function filterValidTransactions(transactions, addresses) {
-    return transactions.filter(transaction =>
-        addresses[transactions.from].safeBalance >= (transaction.value + transaction.fee)
-    )
+    return false;
 }
 
 function getNodeOwnIp() {
@@ -87,9 +60,6 @@ module.exports = {
     isValidPubKey,
     isValidSignature,
     isValidTransactionHash,
-    getAddressBalances,
-    filterValidTransactions,
-    getTransactionsFee,
     getNodeOwnIp,
-    clearSingleTransactionData
+    isValidUrl
 }
