@@ -23,11 +23,11 @@ function processBlockTransactions(transactions) {
 }
 
 function hasFunds(balance, amount) {
-    return balance.confirmedBalance < amount || hasPendingBalance(balance, amount);
+    return balance.confirmedBalance.isGreaterThan(amount) && hasPendingBalance(balance, amount);
 }
 
 function hasPendingBalance(balance, amount) {
-    return balance.pendingBalance < amount && balance.pendingBalance !== 0;
+    return !balance.pendingBalance.isEqualTo('0') && balance.pendingBalance.isGreaterThan(amount);
 }
 
 function getTransactionsFee(transactions) {
