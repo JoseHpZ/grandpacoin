@@ -1,6 +1,4 @@
 require('./global');
-global.initialConfig = 'patoson';
-console.log(global.initialConfig)
 const express = require('express');
 const app = express();
 const routes = require('./source/routes.js');

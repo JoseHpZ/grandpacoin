@@ -25,6 +25,9 @@ class BlockController {
 
     static getSubmittedBlock({ body }, res) {
         const { blockHash, blockDataHash, ...blockHeader } = body;
+        if (blockHash.length !== 64 || blockDataHash.length !== 64)
+            return res.status(400).json({message: 'Invalid data.'});
+        
         const blockCandidate = blockchain.getBlockCandidate(blockDataHash);
         if (!blockCandidate)
             return res.status(404).json('Block not found or Block already mined.');
@@ -36,10 +39,13 @@ class BlockController {
 
         if (newBlock.blockHash === blockHash) {
             blockchain.addBlock(newBlock);
-            return res.status(200).json({'message': 'Block accepted', blockNumber: blockNumber += 1, nonce: newBlock.nonce});
+            return res.status(200).json({
+                message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.', 
+                blockNumber: blockNumber += 1
+            });
         }
         
-        return res.status(404).json('The submit block candidate is invalid.')
+        return res.status(404).json({message: 'Block not found or Block already mined.'});
     }
 
     static getBlocks({ res }) {
