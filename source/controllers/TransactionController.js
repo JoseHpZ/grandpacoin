@@ -1,12 +1,19 @@
 const {
     isValidAddress,
     isValidTransactionHash,
-    getAddressBalances,
     isValidPubKey,
     isValidSignature,
-} = require("../../utils/functions");
+} = require('../../utils/functions');
+const {
+    getAddressBalances,
+    getNewSenderPendingBalance,
+    getNewReceiverPendingBalance,
+} = require('../../utils/BalanceFunctions');
+const { hasFunds } = require('../../utils/transactionFunctions');
 const blockChain = require("../models/Blockchain");
 const Transaction = require("../models/Transaction");
+const Bignumber = require('bignumber.js');
+
 
 class TransactionController {
     static getPendingTransactions({ res }) {
@@ -38,8 +45,31 @@ class TransactionController {
             data,
             senderSignature
         } = request.body;
+
+        if (!value) {
+            return response
+                .status(400)
+                .json({
+                    message: 'The value is required',
+                })
+        }
+        if (!value) {
+            return response
+                .status(400)
+                .json({
+                    message: 'The value is required',
+                })
+        }
+
+        if (Bignumber(value).isLessThan(global.mininumTransactionFee)) {
+            return response
+                .status(400)
+                .json({
+                    message: 'The minimun transaction fee is: ' + global.mininumTransactionFee,
+                })
+        }
+
         let { from, to } = request.body;
-        
         from = isValidAddress(from);
         to = isValidAddress(to);
         
@@ -67,37 +97,32 @@ class TransactionController {
                 .json({ message: "Invalid sender signature" });
         }
 
-        const senderAddressBalances = getAddressBalances(from, blockChain.addresses);
-
-        if (senderAddressBalances.message) {
-            return response.status(404).json(addressBalance);
-        }
-
-        if (senderAddressBalances.safeBalance <= value + fee) {
+        const senderAddressBalances = getAddressBalances(blockChain.addresses[from]);
+        const totalAmount = value + fee;
+        if (!hasFunds(senderAddressBalances, totalAmount)) {
             return response
                 .status(500)
                 .json({
                     message: "Balance is not enough to generate transaction"
                 });
         }
+        
+        const newTransaction = new Transaction({
+            from,
+            to,
+            value,
+            fee,
+            senderPubKey,
+            data,
+            senderSignature: senderSignature[1]
+        });
 
-        blockChain.pendingTransactions.push(
-            new Transaction({
-                from,
-                to,
-                value,
-                fee,
-                senderPubKey,
-                data,
-                senderSignature: senderSignature[1]
-            })
-        );
-
-        return response
-            .status(200)
-            .json(
-                this.pendingTransactions[this.pendingTransactions.length - 1]
-            );
+        blockChain.pendingTransactions.push(newTransaction);
+        // new from pending balance
+        blockChain.addresses[from] = getNewSenderPendingBalance(from, totalAmount);
+        // new to pending balance
+        blockChain.addresses[to] = getNewReceiverPendingBalance(to, totalAmount);
+        return response.json(newTransaction);
     }
 }
 

@@ -31,42 +31,12 @@ function isValidTransactionHash(transaction) {
     return /^([A-Fa-f0-9]{64})$/.test(transaction);
 }
 
-function getAddressBalances(address, addresses) {
-    if (!isValidAddress(address)) {
-        return { message: 'Invalid address, or does not exists.' };
-    }
-    if (!addresses[address]) {
-        return {
-            safeBalance: 0,
-            confirmedBalance: 0,
-            pendingBalance: 0,
-        }
-    }
-    return {
-        safeBalance: addresses[address].safeBalance,
-        confirmedBalance: addresses[address].confirmedBalance,
-        pendingBalance: addresses[address].pendingBalance,
-    };
-}
-
 function getMinerReward(transactions) {
     let acumulatedFees = 0;
     transactions.forEach(transaction => {
         acumulatedFees += transaction.fee
     });
     return acumulatedFees;
-}
-
-function clearSingleTransactionData(transaction) {
-    if (Object.keys(transaction).includes('data') && transaction.data.trim() === '') {
-        delete transaction.data;
-    }
-}
-
-function filterValidTransactions(transactions, addresses) {
-    return transactions.filter(transaction =>
-        addresses[transactions.from].safeBalance >= (transaction.value + transaction.fee)
-    )
 }
 
 function getNodeOwnIp() {
@@ -85,9 +55,6 @@ module.exports = {
     isValidPubKey,
     isValidSignature,
     isValidTransactionHash,
-    getAddressBalances,
-    filterValidTransactions,
     getMinerReward,
     getNodeOwnIp,
-    clearSingleTransactionData,
 }

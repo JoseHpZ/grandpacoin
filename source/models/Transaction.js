@@ -21,8 +21,6 @@ class Transaction {
 
     getData() {
         const { from, to, value, fee, data, dateCreated, senderPubKey, senderSignature } = this;
-
-
         return {
             from,
             to,
