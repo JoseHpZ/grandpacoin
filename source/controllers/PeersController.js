@@ -1,7 +1,8 @@
-const { getNodeOwnIp, isValidUrl } = require("../../utils/functions");
+const { getNodeOwnIp } = require("../../utils/functions");
 const blockChain = require("../models/Blockchain");
 const Request = require("../../utils/Request");
 const Url = require("url");
+const Validator = require('../../utils/Validator');
 
 class PeersController {
     static getConnectedPeers(request, response) {
@@ -14,8 +15,19 @@ class PeersController {
     static async connectPeer(request, response) {
         const { peerUrl } = request.body;
         const { peers, nodeId } = blockChain;
+        const validator = new Validator([
+            {
+                validations: ['isValidUrl'],
+                name: 'url',
+                value: peerUrl
+            }
+        ]);
 
-        if (!isValidUrl(peerUrl)) return response.status(400).json({ message: 'Invalid Url' });
+        if (validator.validate().hasError()) {
+            return response
+                .status(400)
+                .json(validator.getErrors());
+        }
 
         try {
             const remoteNodeInfo = await Request.get(`${peerUrl}/info`);
@@ -34,6 +46,7 @@ class PeersController {
                     peerUrl: getNodeOwnIp().peerUrl
                 }
             })
+            // newPeerConnected.emit('connection', peerUrl);
             console.log(`Connected to peer ${peerUrl}`);
             return response.send({ message: `Connected to peer: ${peerUrl}` });
         } catch (error) {
@@ -44,6 +57,13 @@ class PeersController {
             console.log(`Connection to peer ${peerUrl} failed`);
             return response.send({ message: `Connected to peer: ${peerUrl}` });
         }
+    }
+
+    static notifyNewBlock(request, response) {
+        const { blocksCount, cumulativeDifficulty, nodeUrl } = request.body;
+        return response
+            .status(200)
+            .json({ message: 'Thank you for the notification.', blocksCount, cumulativeDifficulty, nodeUrl })
     }
 }
 
