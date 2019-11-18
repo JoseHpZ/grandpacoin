@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const uuidv4 = require('uuid/v4');
 const ip = require('ip');
+const BigNumber = require('bignumber.js');
 
 function generateNodeId() {
     return crypto
@@ -49,12 +50,12 @@ function getAddressBalances(address, addresses) {
     };
 }
 
-function getMinerReward(transactions) {
-    let acumulatedFees = 0;
+function getTransactionsFee(transactions) {
+    let acumulatedFees = BigNumber(0);
     transactions.forEach(transaction => {
-        acumulatedFees += transaction.fee
+        acumulatedFees = acumulatedFees.plus(transaction.fee)
     });
-    return acumulatedFees;
+    return acumulatedFees.toString();
 }
 
 function clearSingleTransactionData(transaction) {
@@ -79,6 +80,7 @@ function getNodeOwnIp() {
     };
 }
 
+
 module.exports = {
     generateNodeId,
     isValidAddress,
@@ -87,7 +89,7 @@ module.exports = {
     isValidTransactionHash,
     getAddressBalances,
     filterValidTransactions,
-    getMinerReward,
+    getTransactionsFee,
     getNodeOwnIp,
-    clearSingleTransactionData,
+    clearSingleTransactionData
 }

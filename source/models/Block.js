@@ -1,9 +1,10 @@
-const { isValidAddress } = require('../../utils/functions');
 const crypto = require('crypto');
 const Transaction = require('./Transaction');
-const { clearSingleTransactionData, getMinerReward } = require('../../utils/functions');
+const { clearSingleTransactionData, getTransactionsFee } = require('../../utils/functions');
+const BigNumber = require('bignumber.js');
+const GranpaCoin = require('../models/GrandpaCoin');
 
-class Block {
+class Block extends GranpaCoin {
     static getBlockHash(blockObject) {
         return crypto.createHash('sha256')
             .update(JSON.stringify(blockObject))
@@ -24,7 +25,7 @@ class Block {
     }
     static getCandidateBlock({index, prevBlockHash, difficulty, transactions: pendingTransactions, minedBy}) {
         const transactions = [...pendingTransactions];
-        const minerReward = getMinerReward(transactions);
+        const minerReward = getTransactionsFee(transactions);
         const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value: minerReward, data: 'coinbase tx', minedInBlockIndex: index});
         clearSingleTransactionData(coinbaseTransaction);
         transactions.unshift(coinbaseTransaction);
@@ -35,7 +36,7 @@ class Block {
                 index,
                 transactionsIncluded: transactions.length,
                 difficulty,
-                expectedReward: global.blockReward + minerReward,
+                expectedReward: BigNumber(global.blockReward).plus(minerReward).toString(),
                 rewardAddress: minedBy,
                 blockDataHash
             },
@@ -45,7 +46,8 @@ class Block {
                 difficulty,
                 prevBlockHash: prevBlockHash,
                 minedBy,
-                blockDataHash
+                blockDataHash,
+                expectedReward: BigNumber(global.blockReward).plus(minerReward).toString(),
             }
         }
     }
@@ -57,7 +59,7 @@ class Block {
             prevBlockHash,
             minedBy
         });
-        return {
+        return new Block({
             index,
             transactions,
             difficulty,
@@ -67,7 +69,19 @@ class Block {
             dateCreated,
             nonce,
             blockHash: Block.getBlockHash({blockDataHash, dateCreated, nonce})
-        }
+        });
+    }
+    constructor({index, transactions, difficulty, prevBlockHash, minedBy, nonce, dateCreated, blockDataHash, blockHash}) {
+        super();
+        this.index = index;
+        this.transactions = transactions;
+        this.difficulty = difficulty;
+        this.prevBlockHash = prevBlockHash;
+        this.minedBy = minedBy;
+        this.blockDataHash = blockDataHash;
+        this.dateCreated = dateCreated;
+        this.nonce = nonce;
+        this.blockHash = blockHash;
     }
 }
 
