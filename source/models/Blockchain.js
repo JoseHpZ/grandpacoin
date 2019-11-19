@@ -46,9 +46,10 @@ class Blockchain {
     }
 
     addBlock(newBlock) {
-        const lastBlockDate = this.getLastBlock().dateCreated;
+        const lastBlockUnixTime = moment(this.getLastBlock().dateCreated).unix().toString();
         this.chain.push(newBlock);
-        this.adjustDifficulty(newBlock.dateCreated, lastBlockDate);
+        const newBlockUnixTime = moment(newBlock.dateCreated).unix();
+        // this.adjustDifficulty(newBlockUnixTime, lastBlockUnixTime);
         this.blockCandidates = {};
     }
 
@@ -60,11 +61,17 @@ class Blockchain {
         this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
     }
 
-    adjustDifficulty(newBlockDate, lastBlockDate) {
-        if (this.chain.length > 1) {
-            const lastBlockTime = BigNumber(moment(lastBlockDate).unix());
-            const newBlockTime =  BigNumber(this.totalBlockTime).plus(moment(newBlockDate).unix());
-            this.totalBlockTime = newBlockTime.toString();
+    adjustDifficulty(newBlockUnixTime, lastBlockUnixTime) {
+        if (this.chain.length > 2) {
+            const blockTimeDif =  BigNumber(newBlockUnixTime).minus(lastBlockUnixTime).toString();
+            this.totalBlockTime = BigNumber(this.totalBlockTime).plus(blockTimeDif).toString();
+            const averageTime = BigNumber(this.totalBlockTime).dividedBy(this.chain.length);
+            
+            if (averageTime.isLessThan(5)) {
+                this.currentDifficulty += 1;
+            } else if (averageTime.isGreaterThanOrEqualTo(1)) {
+                this.currentDifficulty -= 1;
+            }
         }
     }
     getLastBlock() {
