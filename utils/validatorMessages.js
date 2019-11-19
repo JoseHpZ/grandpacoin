@@ -1,7 +1,7 @@
 module.exports = {
     required: 'The @input field is required.',
     string: 'The @input must be a string.',
-    integer: 'The @input must be a integer number.',
+    integer: 'The @input must be a integer.',
     object: 'The @input must be a literal object {}.',
     nullable: 'The @input can be null.',
     // in: 'The @input are invalid type.',

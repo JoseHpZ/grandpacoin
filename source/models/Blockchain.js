@@ -1,6 +1,7 @@
 const { generateNodeId } = require('../../utils/functions');
 const Block = require('./Block');
-const Bignumber = require('bignumber.js');
+const BigNumber = require('bignumber.js');
+const moment = require('moment');
 
 
 class Blockchain {
@@ -25,6 +26,7 @@ class Blockchain {
         this.chain.push(Block.getGenesisBlock());
         this.blockNumber = 0;
         this.blockCandidates = {};
+        this.totalBlockTime = 0;
     }
 
     getTransactionByHash(hash) {
@@ -48,7 +50,9 @@ class Blockchain {
     }
 
     addBlock(newBlock) {
+        const lastBlockDate = this.getLastBlock().dateCreated;
         this.chain.push(newBlock);
+        this.adjustDifficulty(newBlock.dateCreated, lastBlockDate);
         this.blockCandidates = {};
     }
 
@@ -65,6 +69,16 @@ class Blockchain {
         this.orderPendingTransaction();
     }
 
+    adjustDifficulty(newBlockDate, lastBlockDate) {
+        if (this.chain.length > 1) {
+            const lastBlockTime = BigNumber(moment(lastBlockDate).unix());
+            const newBlockTime =  BigNumber(this.totalBlockTime).plus(moment(newBlockDate).unix());
+            this.totalBlockTime = newBlockTime.toString();
+        }
+    }
+    getLastBlock() {
+        return this.chain[this.chain.length - 1];
+    }
     orderPendingTransaction() {
         this.pendingTransactions.sort(function (transactionA, transactionB) {
             if (Bignumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
