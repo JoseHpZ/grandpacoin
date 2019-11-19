@@ -1,14 +1,9 @@
 const {
-    isValidAddress,
-    isValidTransactionHash,
-    isValidPubKey,
-    isValidSignature,
-} = require('../../utils/functions');
-const {
     getBignumberAddressBalances,
     getNewSenderPendingBalance,
     getNewReceiverPendingBalance,
 } = require('../../utils/BalanceFunctions');
+const { unprefixedAddress } = require('../../utils/functions');
 const { hasFunds } = require('../../utils/transactionFunctions');
 const blockChain = require("../models/Blockchain");
 const Transaction = require("../models/Transaction");
@@ -26,10 +21,15 @@ class TransactionController {
     }
 
     static getTransactionByHash({ params: { hash } }, response) {
-        if (!isValidTransactionHash(hash)) {
+        const validation = new Validator([{
+            validations: ['isValidTransactionHash'],
+            name: 'hash',
+            value: hash,
+        }])
+        if (validation.validate().hasError()) {
             return response
                 .status(400)
-                .json({ message: "Invalid transaction hash" });
+                .json(validation.getErrors());
         }
 
         const transaction = blockChain.getTransactionByHash(hash);
@@ -38,16 +38,16 @@ class TransactionController {
         return response.status(404).json({ message: "Transaction not found" });
     }
 
-    static sendTransaction(request, response) {
+    static sendTransaction({ body }, response) {
         const {
             value,
             fee,
-            senderPublicKey,
+            senderPubKey,
             data,
             senderSignature,
-            from,
-            to,
-        } = request.body;
+        } = body;
+        let from = unprefixedAddress(body.from);
+        let to = unprefixedAddress(body.to);
         const validator = new Validator([
             {
                 validations: ['string'],
@@ -69,13 +69,17 @@ class TransactionController {
             },
             {
                 validations: ['isValidAddress'],
+                customValidations: [{
+                    validation: () => from !== to,
+                    message: 'You can\'t sent money to you own account',
+                }],
                 names: ['from', 'to'],
                 values: { from, to },
             },
             {
                 validations: ['isValidPublicKey'],
-                name: 'senderPublicKey',
-                value: senderPublicKey
+                name: 'senderPubKey',
+                value: senderPubKey
             },
             {
                 validations: ['isValidSignature'],
@@ -83,18 +87,20 @@ class TransactionController {
                 value: senderSignature
             },
         ]);
+
         if (validator.validate().hasError()) {
             return response
                 .status(400)
                 .json(validator.getErrors());
         }
+
         const senderAddressBalances = getBignumberAddressBalances(blockChain.addresses[from]);
         const totalAmount = Bignumber(value).plus(fee);
         if (!hasFunds(senderAddressBalances, totalAmount)) {
             return response
                 .status(400)
                 .json({
-                    message: "Balance is not enough to generate transaction"
+                    message: "Balance is not enough to generate transaction."
                 });
         }
         
@@ -103,16 +109,22 @@ class TransactionController {
             to,
             value,
             fee,
-            senderPublicKey,
+            senderPubKey,
             data,
             senderSignature: senderSignature[1]
         });
-
-        blockChain.pendingTransactions.push(newTransaction);
+        blockChain.addPendingTransaction(newTransaction);
         // new from pending balance
-        blockChain.addresses[from] = getNewSenderPendingBalance(from, totalAmount);
+        blockChain.addresses[from] = {
+            ...blockChain.addresses[from],
+            pendingBalance: getNewSenderPendingBalance(senderAddressBalances, totalAmount),
+        };
         // new to pending balance
-        blockChain.addresses[to] = getNewReceiverPendingBalance(to, totalAmount);
+        const receiverAddressBalances = getBignumberAddressBalances(blockChain.addresses[to]);
+        blockChain.addresses[to] = {
+            ...blockChain.addresses[to],
+            pendingBalance: getNewReceiverPendingBalance(receiverAddressBalances, totalAmount),
+        };
         return response.json(newTransaction);
     }
 }

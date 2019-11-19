@@ -1,6 +1,6 @@
 const { generateNodeId } = require('../../utils/functions');
 const Block = require('./Block');
-const BigNumber = require('bignumber.js');
+const Bignumber = require('bignumber.js');
 
 
 class Blockchain {
@@ -12,11 +12,15 @@ class Blockchain {
 
     initBlockchain() {
         this.chain = [];
-        this.confirmedTransactions = [];
-        this.confirmedTransactionsData = {}; // to store transactions history
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
-        this.addresses = {};
+        this.addresses = {
+            'b392c5549575088f096DAd01e0a89bd6DA116bA2': {
+                confirmedBalance: '50000',
+                safeBalance: '50000',
+                pendingBalance: '0',
+            },
+        };
         this.addressesIds = [];
         this.chain.push(Block.getGenesisBlock());
         this.blockNumber = 0;
@@ -36,7 +40,7 @@ class Blockchain {
 
     getcumulativeDifficult() {
         return this.chain.reduce((cumulativeDifficulty, block) => {
-            return new BigNumber(16)
+            return new Bignumber(16)
                 .exponentiatedBy(block.difficulty)
                 .plus(cumulativeDifficulty)
                 .toString()
@@ -54,6 +58,23 @@ class Blockchain {
 
     storeBlockCandidate(blockCandidate) {
         this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
+    }
+    
+    addPendingTransaction(newTransaction) {
+        this.pendingTransactions.push(newTransaction);
+        this.orderPendingTransaction();
+    }
+
+    orderPendingTransaction() {
+        this.pendingTransactions.sort(function (transactionA, transactionB) {
+            if (Bignumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
+                return -1;
+            }
+            if (Bignumber(transactionA.fee).isLessThan(transactionB.fee)) {
+                return 1;
+            }
+            return 0;
+        })
     }
 
 }

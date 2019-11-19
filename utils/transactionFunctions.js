@@ -1,3 +1,5 @@
+const BigNumber = require('bignumber.js');
+
 function filterValidTransactions(transactions, addresses) {
     return transactions.filter(transaction =>
         addresses[transactions.from].safeBalance >= (transaction.value + transaction.fee)
@@ -23,11 +25,11 @@ function processBlockTransactions(transactions) {
 }
 
 function hasFunds(balance, amount) {
-    return balance.confirmedBalance.isGreaterThan(amount) && hasPendingBalance(balance, amount);
+    return balance.confirmedBalance.isGreaterThanOrEqualTo(amount) && hasPendingBalance(balance, amount);
 }
 
 function hasPendingBalance(balance, amount) {
-    return !balance.pendingBalance.isEqualTo('0') && balance.pendingBalance.isGreaterThan(amount);
+    return balance.pendingBalance.isEqualTo('0') || balance.pendingBalance.isGreaterThan(amount);
 }
 
 function getTransactionsFee(transactions) {
