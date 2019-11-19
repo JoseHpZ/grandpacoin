@@ -6,7 +6,7 @@ const TRANSACTION_STATUS = {
 };
 
 class Transaction {
-    constructor({ from, to, value, fee, senderPubKey, data, senderSignature, minedInBlockIndex }) {
+    constructor({ from, to, value, fee, senderPubKey, data, senderSignature }) {
         this.from = from;
         this.to = to;
         this.value = value;
@@ -15,8 +15,6 @@ class Transaction {
         this.data = data.trim();
         this.senderSignature = senderSignature;
         this.dateCreated = new Date().toISOString();
-        this.minedInBlockIndex = minedInBlockIndex;
-
     }
 
     getData() {
@@ -33,6 +31,41 @@ class Transaction {
             senderSignature
         }
     }
+
+    static genesisTransaction() {
+        const from = '0000000000000000000000000000000000000000';
+        const to = '607168b61015cfe766a3a6716180f9b60e909f35'; // faucet address
+        const value = '10000000000000000000';
+        const fee = '0';
+        const dateCreated = global.originDate;
+        const data = 'genesis tx';
+        const senderPubKey = '00000000000000000000000000000000000000000000000000000000000000000';
+        return {
+            from,
+            to,
+            value,
+            fee,
+            dateCreated,
+            data,
+            senderPubKey,
+            transactionDataHash: Transaction.getTransactionDataHash({
+                from,
+                to,
+                value,
+                fee,
+                dateCreated,
+                data,
+                senderPubKey,
+            }),
+            senderSignature: [
+                '0000000000000000000000000000000000000000000000000000000000000000',
+                '0000000000000000000000000000000000000000000000000000000000000000',
+            ],
+            minedInBlockIndex: 0,
+            transferSuccessful: true,
+        };
+    }
+
 
     static getTransactionDataHash({ from, to, value, fee, data, dateCreated, senderPubKey }) {
         return sha256(JSON.stringify({
@@ -69,10 +102,8 @@ class Transaction {
                 value, 
                 fee, 
                 ...Object.assign({}, data ? { data } : {}),
-                minedInBlockIndex, 
                 from, 
                 senderPubKey, 
-                senderSignature, 
                 dateCreated
             }),
             senderSignature,

@@ -11,15 +11,14 @@ class Block extends GranpaCoin {
             .digest('hex');
     }
     static getGenesisBlock() {
-        const dateCreated = '2019-11-09T01:05:06.705Z';
         return Block.getBlockObject({
             index: 0,
-            transactions: [],
+            transactions: [Transaction.genesisTransaction()],
             difficulty: 0,
             prevBlockHash: '0',
             minedBy: '00000000000000000000000000000000',
             nonce: 0,
-            dateCreated,
+            dateCreated: global.originDate,
             minerAddress: '00000000000000000000000000000000'
         });
     }

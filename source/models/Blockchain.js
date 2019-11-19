@@ -1,6 +1,7 @@
 const { generateNodeId } = require('../../utils/functions');
 const Block = require('./Block');
 const BigNumber = require('bignumber.js');
+const moment = require('moment');
 
 
 class Blockchain {
@@ -12,8 +13,6 @@ class Blockchain {
 
     initBlockchain() {
         this.chain = [];
-        this.confirmedTransactions = [];
-        this.confirmedTransactionsData = {}; // to store transactions history
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
         this.addresses = {};
@@ -21,6 +20,7 @@ class Blockchain {
         this.chain.push(Block.getGenesisBlock());
         this.blockNumber = 0;
         this.blockCandidates = {};
+        this.totalBlockTime = 0;
     }
 
     getTransactionByHash(hash) {
@@ -36,7 +36,7 @@ class Blockchain {
 
     getcumulativeDifficult() {
         return this.chain.reduce((cumulativeDifficulty, block) => {
-            return new BigNumber(16)
+            return new Bignumber(16)
                 .exponentiatedBy(block.difficulty)
                 .plus(cumulativeDifficulty)
                 .toString()
@@ -44,7 +44,9 @@ class Blockchain {
     }
 
     addBlock(newBlock) {
+        const lastBlockDate = this.getLastBlock().dateCreated;
         this.chain.push(newBlock);
+        this.adjustDifficulty(newBlock.dateCreated, lastBlockDate);
         this.blockCandidates = {};
     }
 
@@ -54,6 +56,35 @@ class Blockchain {
 
     storeBlockCandidate(blockCandidate) {
         this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
+    }
+    
+    addPendingTransaction(newTransaction) {
+        this.pendingTransactions.push(newTransaction);
+        this.orderPendingTransaction();
+    }
+
+    adjustDifficulty(newBlockDate, lastBlockDate) {
+        if (this.chain.length > 1) {
+            const lastBlockTime = BigNumber(moment(lastBlockDate).unix());
+            const newBlockTime =  BigNumber(this.totalBlockTime).plus(moment(newBlockDate).unix());
+            this.totalBlockTime = newBlockTime.toString();
+        }
+    }
+
+    getLastBlock() {
+        return this.chain[this.chain.length - 1];
+    }
+
+    orderPendingTransaction() {
+        this.pendingTransactions.sort(function (transactionA, transactionB) {
+            if (BigNumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
+                return -1;
+            }
+            if (BigNumber(transactionA.fee).isLessThan(transactionB.fee)) {
+                return 1;
+            }
+            return 0;
+        })
     }
 
 }

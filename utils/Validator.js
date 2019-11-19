@@ -37,7 +37,6 @@ class Validator extends ValidatorRules {
 
     multipleInputValidation(inputData) {
         for (let name of inputData.names) {
-            console.log('name', name)
             if (inputData.validations) {
                 inputData.validations.forEach(validation => {
                     if (!this.isValidValidation(validation))
