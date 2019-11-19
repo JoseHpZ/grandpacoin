@@ -6,7 +6,7 @@ const TRANSACTION_STATUS = {
 };
 
 class Transaction {
-    constructor({ from, to, value, fee, senderPubKey, data, senderSignature, minedInBlockIndex }) {
+    constructor({ from, to, value, fee, senderPubKey, data, senderSignature }) {
         this.from = from;
         this.to = to;
         this.value = value;
@@ -15,8 +15,6 @@ class Transaction {
         this.data = data.trim();
         this.senderSignature = senderSignature;
         this.dateCreated = new Date().toISOString();
-        this.minedInBlockIndex = minedInBlockIndex;
-
     }
 
     getData() {
