@@ -29,8 +29,7 @@ module.exports = (router) => {
     // Peers routes
     router.get('/peers', PeersController.getConnectedPeers);
     router.post('/peers/connect', PeersController.connectPeer);
-    router.post('/peers/notify-new-block', function (req, res) {
-    })
+    router.post('/peers/notify-new-block', PeersController.notifyNewBlock);
 
     // Default route
     router.all('*', function (req, res) {

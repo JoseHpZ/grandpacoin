@@ -20,6 +20,10 @@ function isValidAddress(address) {
         return false;
 }
 
+function unprefixedAddress(address) {
+    return  address.replace(/^0x/, '');
+}
+
 function isValidPubKey(pubKey) {
     return /^([A-Fa-f0-9]{65})$/.test(pubKey);
 }
@@ -61,5 +65,6 @@ module.exports = {
     isValidSignature,
     isValidTransactionHash,
     getNodeOwnIp,
-    isValidUrl
+    isValidUrl,
+    unprefixedAddress,
 }
