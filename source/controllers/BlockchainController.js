@@ -37,14 +37,15 @@ class BlockchainController {
             currentDifficult: blockchain.currentDifficulty,
             blocksCount: blockchain.chain.length,
             cumulativeDifficulty: blockchain.getcumulativeDifficult(),
-            confirmedTransactions: blockchain.confirmedTransactions.length,
             pendingTransactions: blockchain.pendingTransactions.length,
+            addresses: blockchain.addresses,
             chain: {
                 blocks: blockchain.chain,
                 prevBlockHash: blockchain.chain,
             },
         });
     }
+    
     static debugMining({ params: { minerAddress, difficulty }}, res) {
         const validator = new Validator([
             {

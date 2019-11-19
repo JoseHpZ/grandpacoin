@@ -1,7 +1,7 @@
 const {
     getBignumberAddressBalances,
-    getNewSenderPendingBalance,
-    getNewReceiverPendingBalance,
+    newSenderPendingBalance,
+    newReceiverPendingBalance,
 } = require('../../utils/BalanceFunctions');
 const { unprefixedAddress } = require('../../utils/functions');
 const { hasFunds } = require('../../utils/transactionFunctions');
@@ -94,7 +94,7 @@ class TransactionController {
                 .json(validator.getErrors());
         }
 
-        const senderAddressBalances = getBignumberAddressBalances(blockChain.addresses[from]);
+        const senderAddressBalances = getBignumberAddressBalances(blockChain.getAddress(from));
         const totalAmount = Bignumber(value).plus(fee);
         if (!hasFunds(senderAddressBalances, totalAmount)) {
             return response
@@ -115,16 +115,18 @@ class TransactionController {
         }).getData();
         blockChain.addPendingTransaction(newTransaction);
         // new from pending balance
-        blockChain.addresses[from] = {
-            ...blockChain.addresses[from],
-            pendingBalance: getNewSenderPendingBalance(senderAddressBalances, totalAmount),
-        };
+        blockChain.setAddressData(from, {
+            ...blockChain.getAddress(from),
+            pendingBalance: newSenderPendingBalance(senderAddressBalances, totalAmount),
+        });
         // new to pending balance
         const receiverAddressBalances = getBignumberAddressBalances(blockChain.addresses[to]);
-        blockChain.addresses[to] = {
-            ...blockChain.addresses[to],
-            pendingBalance: getNewReceiverPendingBalance(receiverAddressBalances, totalAmount),
-        };
+        blockChain.setAddressData(to, {
+            ...blockChain.getAddress(to),
+            safeBalance: receiverAddressBalances.safeBalance.toString(),
+            confirmedBalance: receiverAddressBalances.confirmedBalance.toString(),
+            pendingBalance: newReceiverPendingBalance(receiverAddressBalances, value),
+        });
         return response.json(newTransaction);
     }
 }

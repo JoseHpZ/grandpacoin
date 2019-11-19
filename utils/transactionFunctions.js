@@ -1,8 +1,12 @@
 const BigNumber = require('bignumber.js');
+const { getBignumberAddressBalances } = require('./BalanceFunctions')
 
-function filterValidTransactions(transactions, addresses) {
-    return transactions.filter(transaction =>
-        addresses[transactions.from].safeBalance >= (transaction.value + transaction.fee)
+
+function removeDuplicateSender(transactions) {
+    return transactions.filter((transaction, index, self) =>
+        index === self.findIndex((t) => (
+            t.from !== transaction.from
+        ))
     )
 }
 
@@ -40,10 +44,25 @@ function getTransactionsFee(transactions) {
     return acumulatedFees.toString();
 }
 
+/**
+ * 
+ * @param {array} pendingTransactions
+ * filter transaction without funds to pay the transaction fee
+ */
+function removeTransactionWithoutFunds(pendingTransactions) {
+    return pendingTransactions.filter(transaction => 
+        hasFunds(
+            getBignumberAddressBalances(transaction.from),
+            BigNumber(transaction.fee)
+        )
+    )
+}
+
 module.exports = {
     processBlockTransactions,
     clearSingleTransactionData,
-    filterValidTransactions,
+    removeDuplicateSender,
     hasFunds,
     getTransactionsFee,
+    removeTransactionWithoutFunds,
 }

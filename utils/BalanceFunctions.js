@@ -30,19 +30,19 @@ function getBignumberAddressBalances(address) {
     };
 }
 
-function getNewSenderPendingBalance(balances, amount) {
+function newSenderPendingBalance(balances, amount) {
     return  balances.pendingBalance.isEqualTo('0')
         ? Bignumber(balances.confirmedBalance).minus(amount).toString()
         : Bignumber(balances.pendingBalance).minus(amount).toString();
 }
 
-function getNewReceiverPendingBalance(balances, amount) {
+function newReceiverPendingBalance(balances, amount) {
     return Bignumber(balances.pendingBalance).plus(amount).toString();
 }
 
 module.exports = {
     getAddressBalances,
-    getNewSenderPendingBalance,
-    getNewReceiverPendingBalance,
+    newSenderPendingBalance,
+    newReceiverPendingBalance,
     getBignumberAddressBalances,
 }

@@ -1,23 +1,30 @@
-const { isValidAddress } = require('../../utils/functions');
+const { unprefixedAddress } = require('../../utils/functions');
+const { removeDuplicateSender } = require('../../utils/transactionFunctions');
+const Validator = require('../../utils/Validator');
 const blockchain = require('../models/Blockchain');
 const Block = require('../models/Block');
 
 class BlockController {
     static getMiningJob({ params: { minerAddress }}, res) {
-        const address = isValidAddress(minerAddress);
-        if (!address)
-            return res.status(400).json({ message: 'Invalid Address.' });
+        const validator = new Validator([{
+            validations: ['isValidAddress'],
+            name: 'minerAddress',
+            value: minerAddress,
+        }])
+        if (validator.validate().hasError())
+            return res.status(400).json({ message: 'Invalid block or already mined.' });
 
+        blockchain.removeInvalidPendingTransactions();
         const block = Block.getCandidateBlock({
             index: blockchain.chain.length,
             prevBlockHash: blockchain.chain[blockchain.chain.length - 1].blockHash,
             difficulty: blockchain.currentDifficulty,
-            transactions: blockchain.pendingTransactions,
-            minedBy: address
+            transactions: removeDuplicateSender(blockchain.pendingTransactions),
+            minedBy: unprefixedAddress(minerAddress)
         });
         const { miningJob, ...blockCandidate } = block;
         blockchain.storeBlockCandidate(blockCandidate);
-            
+        console.log(miningJob)
         return res.status(200).json(miningJob);
     }
 
