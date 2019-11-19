@@ -10,8 +10,7 @@ module.exports = (router) => {
     router.get('/info', BlockchainController.getInfo);
     router.get('/debug', BlockchainController.getDebug);
     router.get('/debug/reset-chain', BlockchainController.resetChain);
-    // router.get('/debug/mine/:minerAddress/:difficulty', function (req, res) {
-    // });
+    router.get('/debug/mine/:minerAddress/:difficulty', BlockchainController.debugMining);
 
     // Transaction routes
     router.get('/transactions/pending', TransactionController.getPendingTransactions);

@@ -1,3 +1,5 @@
+const BigNumber = require('bignumber.js');
+
 function filterValidTransactions(transactions, addresses) {
     return transactions.filter(transaction =>
         addresses[transactions.from].safeBalance >= (transaction.value + transaction.fee)
