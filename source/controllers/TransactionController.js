@@ -111,8 +111,8 @@ class TransactionController {
             fee,
             senderPubKey,
             data,
-            senderSignature: senderSignature[1]
-        });
+            senderSignature: senderSignature,
+        }).getData();
         blockChain.addPendingTransaction(newTransaction);
         // new from pending balance
         blockChain.addresses[from] = {

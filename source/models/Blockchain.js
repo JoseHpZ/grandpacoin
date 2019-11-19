@@ -15,13 +15,7 @@ class Blockchain {
         this.chain = [];
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
-        this.addresses = {
-            'b392c5549575088f096DAd01e0a89bd6DA116bA2': {
-                confirmedBalance: '50000',
-                safeBalance: '50000',
-                pendingBalance: '0',
-            },
-        };
+        this.addresses = {};
         this.addressesIds = [];
         this.chain.push(Block.getGenesisBlock());
         this.blockNumber = 0;
@@ -76,15 +70,17 @@ class Blockchain {
             this.totalBlockTime = newBlockTime.toString();
         }
     }
+
     getLastBlock() {
         return this.chain[this.chain.length - 1];
     }
+
     orderPendingTransaction() {
         this.pendingTransactions.sort(function (transactionA, transactionB) {
-            if (Bignumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
+            if (BigNumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
                 return -1;
             }
-            if (Bignumber(transactionA.fee).isLessThan(transactionB.fee)) {
+            if (BigNumber(transactionA.fee).isLessThan(transactionB.fee)) {
                 return 1;
             }
             return 0;

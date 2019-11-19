@@ -50,7 +50,11 @@ class ValidatorRules {
     }
 
     isValidSignature(signature) {
-        return /^([A-Fa-f0-9]{64})$/.test(signature);
+        if (!this.array(signature) || signature.length !== 2) 
+            return false;
+        if (signature[0] === signature[1])
+            return false;
+        return /^([A-Fa-f0-9]{64})$/.test(signature[0]) && /^([A-Fa-f0-9]{64})$/.test(signature[1]);
     }
 
     isValidTransactionHash(transaction) {
@@ -61,7 +65,10 @@ class ValidatorRules {
         if (!address) return false;
         return /^([A-Fa-f0-9]{40})$/.test(address.replace(/^0x/, ''));
     }
-
+    
+    array(value) {
+        return Array.isArray(value);
+    }
 
     isValidUrl(url) {
         if (!url) return false;
