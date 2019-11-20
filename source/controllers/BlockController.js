@@ -1,19 +1,28 @@
-const { isValidAddress } = require('../../utils/functions');
+const { unprefixedAddress } = require('../../utils/functions');
+const { removeDuplicateSender, varifyAndGenerateBalances } = require('../../utils/transactionFunctions');
+const Validator = require('../../utils/Validator');
 const blockchain = require('../models/Blockchain');
 const Block = require('../models/Block');
+const BigNumber = require('bignumber.js');
+
 
 class BlockController {
     static getMiningJob({ params: { minerAddress }}, res) {
-        const address = isValidAddress(minerAddress);
-        if (!address)
-            return res.status(400).json({ message: 'Invalid Address.' });
+        const validator = new Validator([{
+            validations: ['isValidAddress'],
+            name: 'minerAddress',
+            value: minerAddress,
+        }])
+        if (validator.validate().hasError())
+            return res.status(400).json({ message: 'Invalid block or already mined.' });
 
+        blockchain.removeInvalidPendingTransactions();
         const block = Block.getCandidateBlock({
             index: blockchain.chain.length,
             prevBlockHash: blockchain.chain[blockchain.chain.length - 1].blockHash,
             difficulty: blockchain.currentDifficulty,
-            transactions: blockchain.pendingTransactions,
-            minedBy: address
+            transactions: removeDuplicateSender(blockchain.pendingTransactions),
+            minedBy: unprefixedAddress(minerAddress)
         });
         const { miningJob, ...blockCandidate } = block;
         blockchain.storeBlockCandidate(blockCandidate);
@@ -34,14 +43,12 @@ class BlockController {
             ...blockHeader
         });
 
-        if (newBlock.blockHash === blockHash) {
-            if (newBlock.index === blockchain.getLastBlock().index + 1) {
-                blockchain.addBlock(newBlock);
-                return res.status(200).json({
-                    message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
-                });
-            }
-            return res.status(404).json({message: 'Block not found or Block already mined.'});
+        if (newBlock.blockHash === blockHash && (newBlock.index === blockchain.getLastBlock().index + 1)) {
+            const transactions = varifyAndGenerateBalances(newBlock, blockchain);
+            blockchain.addBlock({ ...newBlock, transactions });
+            return res.status(200).json({
+                message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
+            });
         }
         
         return res.status(404).json({message: 'Block not found or Block already mined.'});

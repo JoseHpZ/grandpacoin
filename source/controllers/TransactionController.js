@@ -1,10 +1,10 @@
 const {
     getBignumberAddressBalances,
-    getNewSenderPendingBalance,
-    getNewReceiverPendingBalance,
+    newSenderPendingBalance,
+    newReceiverPendingBalance,
 } = require('../../utils/BalanceFunctions');
 const { unprefixedAddress } = require('../../utils/functions');
-const { hasFunds } = require('../../utils/transactionFunctions');
+const { hasFunds, verifySignature } = require('../../utils/transactionFunctions');
 const blockChain = require("../models/Blockchain");
 const Transaction = require("../models/Transaction");
 const Bignumber = require('bignumber.js');
@@ -17,7 +17,7 @@ class TransactionController {
     }
 
     static getConfirmedTransactions({ res }) {
-        return res.status(200).json(blockChain.confirmedTransactions);
+        return res.status(200).json(blockChain.getConfirmedTransactions());
     }
 
     static getTransactionByHash({ params: { hash } }, response) {
@@ -45,9 +45,9 @@ class TransactionController {
             senderPubKey,
             data,
             senderSignature,
+            dateCreated,
         } = body;
-        let from = unprefixedAddress(body.from);
-        let to = unprefixedAddress(body.to);
+        let { from, to } = body;
         const validator = new Validator([
             {
                 validations: ['string'],
@@ -55,7 +55,7 @@ class TransactionController {
                 value: data,
             },
             {
-                validations: ['required','string'],
+                validations: ['required', 'string'],
                 name: 'value',
                 value,
             },
@@ -86,7 +86,14 @@ class TransactionController {
                 name: 'senderSignature',
                 value: senderSignature
             },
+            {
+                validations: ['date'],
+                name: 'dateCreated',
+                value: dateCreated
+            },
         ]);
+        from = unprefixedAddress(body.from);
+        to = unprefixedAddress(body.to);
 
         if (validator.validate().hasError()) {
             return response
@@ -94,7 +101,7 @@ class TransactionController {
                 .json(validator.getErrors());
         }
 
-        const senderAddressBalances = getBignumberAddressBalances(blockChain.addresses[from]);
+        const senderAddressBalances = getBignumberAddressBalances(blockChain.getAddressData(from));
         const totalAmount = Bignumber(value).plus(fee);
         if (!hasFunds(senderAddressBalances, totalAmount)) {
             return response
@@ -103,7 +110,7 @@ class TransactionController {
                     message: "Balance is not enough to generate transaction."
                 });
         }
-        
+
         const newTransaction = new Transaction({
             from,
             to,
@@ -112,19 +119,32 @@ class TransactionController {
             senderPubKey,
             data,
             senderSignature: senderSignature,
+            dateCreated,
         }).getData();
+
+        if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
+            return response
+                .status(400)
+                .json({
+                    message: "Trasaction signature verification invalid."
+                });
+        }
+
+        // add new pending transaction
         blockChain.addPendingTransaction(newTransaction);
         // new from pending balance
-        blockChain.addresses[from] = {
-            ...blockChain.addresses[from],
-            pendingBalance: getNewSenderPendingBalance(senderAddressBalances, totalAmount),
-        };
+        blockChain.setAddressData(from, {
+            ...blockChain.getAddressData(from),
+            pendingBalance: newSenderPendingBalance(senderAddressBalances, totalAmount),
+        });
         // new to pending balance
-        const receiverAddressBalances = getBignumberAddressBalances(blockChain.addresses[to]);
-        blockChain.addresses[to] = {
-            ...blockChain.addresses[to],
-            pendingBalance: getNewReceiverPendingBalance(receiverAddressBalances, totalAmount),
-        };
+        const receiverAddressBalances = getBignumberAddressBalances(blockChain.getAddressData(to));
+        blockChain.setAddressData(to, {
+            ...blockChain.getAddressData(to),
+            safeBalance: receiverAddressBalances.safeBalance.toString(),
+            confirmedBalance: receiverAddressBalances.confirmedBalance.toString(),
+            pendingBalance: newReceiverPendingBalance(receiverAddressBalances, value),
+        });
         return response.json(newTransaction);
     }
 }

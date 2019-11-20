@@ -6,15 +6,15 @@ const TRANSACTION_STATUS = {
 };
 
 class Transaction {
-    constructor({ from, to, value, fee, senderPubKey, data, senderSignature }) {
+    constructor({ from, to, value, fee, senderPubKey, data, senderSignature, dateCreated }) {
         this.from = from;
         this.to = to;
         this.value = value;
         this.fee = fee;
+        this.dateCreated = dateCreated;
+        this.data = data ? data.trim() : null;
         this.senderPubKey = senderPubKey;
-        this.data = data.trim();
         this.senderSignature = senderSignature;
-        this.dateCreated = new Date().toISOString();
     }
 
     getData() {
@@ -34,7 +34,7 @@ class Transaction {
 
     static genesisTransaction() {
         const from = '0000000000000000000000000000000000000000';
-        const to = '607168b61015cfe766a3a6716180f9b60e909f35'; // faucet address
+        const to = 'a6ef9089840a55ae5934b49e681ca6a60a7ebaec'; // faucet address
         const value = '10000000000000000000';
         const fee = '0';
         const dateCreated = global.originDate;
@@ -79,7 +79,7 @@ class Transaction {
         }))
     }
 
-    static getCoinbaseTransaction({ to, value, data, minedInBlockIndex }) {
+    static getCoinbaseTransaction({ to, value, data }) {
         const from = '0000000000000000000000000000000000000000',
             senderPubKey = '00000000000000000000000000000000000000000000000000000000000000000',
             senderSignature = [
@@ -98,16 +98,15 @@ class Transaction {
             ...Object.assign({}, data ? { data } : {}),
             senderPubKey,
             transactionDataHash: Transaction.getTransactionDataHash({
-                to, 
-                value, 
-                fee, 
+                to,
+                value,
+                fee,
                 ...Object.assign({}, data ? { data } : {}),
-                from, 
-                senderPubKey, 
+                from,
+                senderPubKey,
                 dateCreated
             }),
             senderSignature,
-            minedInBlockIndex
         }
     }
 }

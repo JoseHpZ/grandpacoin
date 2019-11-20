@@ -2,6 +2,8 @@ const { generateNodeId } = require('../../utils/functions');
 const Block = require('./Block');
 const BigNumber = require('bignumber.js');
 const moment = require('moment');
+const { removeTransactionWithoutFunds } = require('../../utils/transactionFunctions')
+const Transaction = require('./Transaction');
 
 
 class Blockchain {
@@ -15,12 +17,18 @@ class Blockchain {
         this.chain = [];
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
-        this.addresses = {};
+        this.addresses = {
+            'f88b3515440b9fa31579f53eb750f16380f01801': {
+                confirmedBalance: '50000',
+                safeBalance: '50000',
+                pendingBalance: '0',
+            },
+        };
         this.addressesIds = [];
-        this.chain.push(Block.getGenesisBlock());
         this.blockNumber = 0;
         this.blockCandidates = {};
         this.totalBlockTime = 0;
+        this.generateGenesisBlock();
     }
 
     getTransactionByHash(hash) {
@@ -36,7 +44,7 @@ class Blockchain {
 
     getcumulativeDifficult() {
         return this.chain.reduce((cumulativeDifficulty, block) => {
-            return new Bignumber(16)
+            return new BigNumber(16)
                 .exponentiatedBy(block.difficulty)
                 .plus(cumulativeDifficulty)
                 .toString()
@@ -58,7 +66,7 @@ class Blockchain {
     storeBlockCandidate(blockCandidate) {
         this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
     }
-    
+
     addPendingTransaction(newTransaction) {
         this.pendingTransactions.push(newTransaction);
         this.orderPendingTransaction();
@@ -66,10 +74,10 @@ class Blockchain {
 
     adjustDifficulty(newBlockUnixTime, lastBlockUnixTime) {
         if (this.chain.length > 2) {
-            const blockTimeDif =  BigNumber(newBlockUnixTime).minus(lastBlockUnixTime).toString();
+            const blockTimeDif = BigNumber(newBlockUnixTime).minus(lastBlockUnixTime).toString();
             this.totalBlockTime = BigNumber(this.totalBlockTime).plus(blockTimeDif).toString();
             const averageTime = BigNumber(this.totalBlockTime).dividedBy(this.chain.length);
-            
+
             if (averageTime.isLessThan(5)) {
                 this.currentDifficulty += 1;
             } else if (averageTime.isGreaterThanOrEqualTo(1)) {
@@ -94,6 +102,37 @@ class Blockchain {
         })
     }
 
+    removeInvalidPendingTransactions() {
+        this.pendingTransactions = removeTransactionWithoutFunds(this.pendingTransactions, this.addresses);
+    }
+
+    getAddressData(address) {
+        return this.addresses[address];
+    }
+
+    setAddressData(address, data) {
+        this.addresses[address] = data;
+    }
+
+    generateGenesisBlock() {
+        const faucetTransaction = Transaction.genesisTransaction();
+        this.chain.push(Block.getGenesisBlock(faucetTransaction));
+        this.setAddressData(faucetTransaction.to, {
+            safeBalance: faucetTransaction.value,
+            confirmedBalance: faucetTransaction.value,
+            pendingBalance: '0',
+        });
+    }
+
+    getConfirmedTransactions() {
+        let confirmedTransactions = [];
+
+        this.chain.forEach((block) => {
+            confirmedTransactions = [...confirmedTransactions, ...block.transactions]
+        })
+
+        return confirmedTransactions;
+    }
 }
 
 const blockChain = new Blockchain();
