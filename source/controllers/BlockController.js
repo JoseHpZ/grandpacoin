@@ -37,7 +37,7 @@ class BlockController {
         
         const blockCandidate = blockchain.getBlockCandidate(blockDataHash);
         if (!blockCandidate)
-            return res.status(404).json('Block not found or Block already mined.');
+            return res.status(404).json({message: 'Block not found or Block already mined.'});
 
         const newBlock = Block.getBlockObject({
             ...blockCandidate,
