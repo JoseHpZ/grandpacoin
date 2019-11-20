@@ -40,9 +40,52 @@ function newReceiverPendingBalance(balances, amount) {
     return Bignumber(balances.pendingBalance).plus(amount).toString();
 }
 
+function rewardBalace(balances, expectedReward) {
+    return {
+        confirmedBalance: balances.confirmedBalance.plus(expectedReward).toString(),
+        safeBalance: balances.safeBalance.toString(),
+        pendingBalance:  balances.pendingBalance.toString(),
+    }
+}
+
+function newSenderBalance(balances, totalAmount) {
+    const newSenderSafeBalance = balances.safeBalance.minus(totalAmount);
+    return {
+        safeBalance: newSenderSafeBalance.isLessThan('0') ? '0' : newSenderSafeBalance.toString(),
+        confirmedBalance: balances.confirmedBalance.minus(totalAmount).toString(),
+        pendingBalance: balances.pendingBalance.minus(balances.confirmedBalance).toString(),
+    }
+}
+
+function newReceiverBalance(balances, value) {
+    return {
+        safeBalance: balances.safeBalance.toString(),
+        confirmedBalance: balances.confirmedBalance.plus(value).toString(),
+        pendingBalance: balances.pendingBalance.minus(value).toString(),
+    }
+}
+
+function payFeeOnFailTransaction(balances, fee, value) {
+    const newSenderSafeBalance = balances.safeBalance.minus(totalAmount);
+    return {
+        safeBalance: newSenderSafeBalance.isLessThan('0') ? '0' : newSenderSafeBalance.toString(),
+        confirmedBalance: fromBalances.confirmedBalance.minus(transaction.fee).toString(),
+        pendingBalance: fromBalances.pendingBalance.minus(totalAmount).toString(),
+    }
+}
+
+function subtractPendingReceiverBalance() {
+    
+}
+
 module.exports = {
     getAddressBalances,
     newSenderPendingBalance,
     newReceiverPendingBalance,
     getBignumberAddressBalances,
+    rewardBalace,
+    newSenderBalance,
+    newReceiverBalance,
+    payFeeOnFailTransaction,
+    subtractPendingReceiverBalance,
 }

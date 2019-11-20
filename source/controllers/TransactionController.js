@@ -45,9 +45,9 @@ class TransactionController {
             senderPubKey,
             data,
             senderSignature,
+            dateCreated,
         } = body;
-        const from = unprefixedAddress(body.from);
-        const to = unprefixedAddress(body.to);
+        let { from , to } = body;
         const validator = new Validator([
             {
                 validations: ['string'],
@@ -86,8 +86,15 @@ class TransactionController {
                 name: 'senderSignature',
                 value: senderSignature
             },
+            {
+                validations: ['date'],
+                name: 'dateCreated',
+                value: dateCreated
+            },
         ]);
-        
+        from = unprefixedAddress(body.from);
+        to = unprefixedAddress(body.to);
+
         if (validator.validate().hasError()) {
             return response
                 .status(400)
@@ -112,16 +119,16 @@ class TransactionController {
             senderPubKey,
             data,
             senderSignature: senderSignature,
-            dateCreated: '2019-11-16T22:34:24.564Z'
+            dateCreated,
         }).getData();
-        console.log('newTransaction', newTransaction)
-        // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
-        //     return response
-        //         .status(400)
-        //         .json({
-        //             message: "Trasaction signature verification invalid."
-        //         });
-        // }
+        
+        if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
+            return response
+                .status(400)
+                .json({
+                    message: "Trasaction signature verification invalid."
+                });
+        }
 
         // add new pending transaction
         blockChain.addPendingTransaction(newTransaction);

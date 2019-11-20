@@ -18,7 +18,7 @@ class Blockchain {
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
         this.addresses = {
-            '999067568fed3f20dd265413e70f48a060dad93c': {
+            'f88b3515440b9fa31579f53eb750f16380f01801': {
                 confirmedBalance: '50000',
                 safeBalance: '50000',
                 pendingBalance: '0',
@@ -52,9 +52,10 @@ class Blockchain {
     }
 
     addBlock(newBlock) {
-        const lastBlockDate = this.getLastBlock().dateCreated;
+        const lastBlockUnixTime = moment(this.getLastBlock().dateCreated).unix().toString();
         this.chain.push(newBlock);
-        this.adjustDifficulty(newBlock.dateCreated, lastBlockDate);
+        const newBlockUnixTime = moment(newBlock.dateCreated).unix();
+        this.adjustDifficulty(newBlockUnixTime, lastBlockUnixTime);
         this.blockCandidates = {};
     }
 
@@ -71,11 +72,17 @@ class Blockchain {
         this.orderPendingTransaction();
     }
 
-    adjustDifficulty(newBlockDate, lastBlockDate) {
-        if (this.chain.length > 1) {
-            const lastBlockTime = BigNumber(moment(lastBlockDate).unix());
-            const newBlockTime =  BigNumber(this.totalBlockTime).plus(moment(newBlockDate).unix());
-            this.totalBlockTime = newBlockTime.toString();
+    adjustDifficulty(newBlockUnixTime, lastBlockUnixTime) {
+        if (this.chain.length > 2) {
+            const blockTimeDif =  BigNumber(newBlockUnixTime).minus(lastBlockUnixTime).toString();
+            this.totalBlockTime = BigNumber(this.totalBlockTime).plus(blockTimeDif).toString();
+            const averageTime = BigNumber(this.totalBlockTime).dividedBy(this.chain.length);
+            
+            if (averageTime.isLessThan(5)) {
+                this.currentDifficulty += 1;
+            } else if (averageTime.isGreaterThanOrEqualTo(1)) {
+                this.currentDifficulty -= 1;
+            }
         }
     }
 
