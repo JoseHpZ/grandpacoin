@@ -80,6 +80,18 @@ class ValidatorRules {
         }
         return false;
     }
+
+    date(value) {
+        if (value instanceof Date) {
+            return true;
+        }
+
+        if (typeof value !== 'string' && typeof value !== 'number') {
+            return false;
+        }
+
+        return !isNaN(Date.parse(value));
+    }
 }
 
 module.exports = ValidatorRules;

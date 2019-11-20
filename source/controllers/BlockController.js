@@ -1,9 +1,8 @@
 const { unprefixedAddress } = require('../../utils/functions');
-const { removeDuplicateSender, hasFunds } = require('../../utils/transactionFunctions');
+const { removeDuplicateSender, varifyAndGenerateBalances } = require('../../utils/transactionFunctions');
 const Validator = require('../../utils/Validator');
 const blockchain = require('../models/Blockchain');
 const Block = require('../models/Block');
-const { getBignumberAddressBalances } = require('../../utils/BalanceFunctions');
 const BigNumber = require('bignumber.js');
 
 
@@ -45,69 +44,7 @@ class BlockController {
         });
 
         if (newBlock.blockHash === blockHash && (newBlock.index === blockchain.getLastBlock().index + 1)) {
-            let transactions = [];
-            newBlock.transactions.forEach((transaction, index) => {
-                // block reward transaction
-                if (index === 0) {
-                    const minerBalances = getBignumberAddressBalances(
-                        blockchain.getAddressData(newBlock.minedBy)
-                    );
-                    console.log('minerBalances: ', minerBalances)
-                    blockchain.setAddressData(newBlock.minedBy, {
-                        ...blockchain.getAddressData(transaction.from),
-                        confirmedBalance: minerBalances.confirmedBalance.plus(blockCandidate.expectedReward).toString(),
-                        safeBalance: minerBalances.safeBalance.toString(),
-                        pendingBalance:  minerBalances.pendingBalance.toString(),
-                    });
-                    transactions.push({
-                        ...transactions,
-                        minedInBlockIndex: newBlock.index,
-                        transactionSuccessful: true,
-                    });
-                    return;
-                }
-                const totalAmount = BigNumber(transaction.value).plus(transaction.fee);
-                const fromBalances = getBignumberAddressBalances(
-                    blockchain.getAddressData(transaction.from)
-                );
-                let success = false;
-                if (hasFunds(fromBalances, totalAmount)) {
-                    success = true;
-                    // subtract the pending balance and confirm balance of the sender
-                    const newSenderSafeBalance = fromBalances.safeBalance.minus(totalAmount);
-                    blockchain.setAddressData(transaction.from, {
-                        ...blockchain.getAddressData(transaction.from),
-                        safeBalance: newSenderSafeBalance.isLessThan('0') ? '0' : newSenderSafeBalance.toString(),
-                        confirmedBalance: fromBalances.confirmedBalance.minus(totalAmount).toString(),
-                        pendingBalance: fromBalances.pendingBalance.minus(fromBalances.confirmedBalance).toString(),
-                    });
-                    const toBalances = getBignumberAddressBalances(blockchain.getAddressData(transaction.to));
-                    blockchain.setAddressData(transaction.to, {
-                        ...blockchain.getAddressData(transaction.to),
-                        pendingBalance: toBalances.pendingBalance.minus(transaction.value).toString(),
-                        confirmedBalance: toBalances.confirmedBalance.plus(transaction.value).toString(),
-                    });
-                  
-                } else {
-                    // only paid the fee
-                    blockchain.setAddressData(transaction.from, {
-                        ...blockchain.getAddressData(from),
-                        pendingBalance: fromBalances.pendingBalance.minus(totalAmount).toString(),
-                        confirmedBalance: fromBalances.confirmedBalance.minus(transaction.fee).toString(),
-                    });
-                    // subtract the pending balance
-                    const toBalances = getBignumberAddressBalances(transaction.to);
-                    blockchain.setAddressData(transaction.to, {
-                        ...blockchain.getAddressData(to),
-                        pendingBalance: toBalances.pendingBalance.minus(transaction.value).toString(),
-                    });
-                }
-                transactions.push({
-                    ...transaction,
-                    minedInBlockIndex: newBlock.index,
-                    transferSuccessful: success,
-                })
-            });
+            const transactions = varifyAndGenerateBalances(newBlock, blockchain);
             blockchain.addBlock({ ...newBlock, transactions });
             return res.status(200).json({
                 message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
