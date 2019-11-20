@@ -17,7 +17,7 @@ class TransactionController {
     }
 
     static getConfirmedTransactions({ res }) {
-        return res.status(200).json(blockChain.confirmedTransactions);
+        return res.status(200).json(blockChain.getConfirmedTransactions());
     }
 
     static getTransactionByHash({ params: { hash } }, response) {
@@ -47,7 +47,7 @@ class TransactionController {
             senderSignature,
             dateCreated,
         } = body;
-        let { from , to } = body;
+        let { from, to } = body;
         const validator = new Validator([
             {
                 validations: ['string'],
@@ -55,7 +55,7 @@ class TransactionController {
                 value: data,
             },
             {
-                validations: ['required','string'],
+                validations: ['required', 'string'],
                 name: 'value',
                 value,
             },
@@ -100,7 +100,7 @@ class TransactionController {
                 .status(400)
                 .json(validator.getErrors());
         }
-        
+
         const senderAddressBalances = getBignumberAddressBalances(blockChain.getAddressData(from));
         const totalAmount = Bignumber(value).plus(fee);
         if (!hasFunds(senderAddressBalances, totalAmount)) {
@@ -110,7 +110,7 @@ class TransactionController {
                     message: "Balance is not enough to generate transaction."
                 });
         }
-        
+
         const newTransaction = new Transaction({
             from,
             to,
@@ -121,7 +121,7 @@ class TransactionController {
             senderSignature: senderSignature,
             dateCreated,
         }).getData();
-        
+
         if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
             return response
                 .status(400)

@@ -11,7 +11,7 @@ class BlockchainController {
             .status(200)
             .json({ message: 'The chain was reset to its genesis block.' });
     }
-    
+
     static getInfo(req, res) {
         return res.json({
             about: global.appName,
@@ -22,18 +22,18 @@ class BlockchainController {
             currentDifficult: blockchain.currentDifficulty,
             blocksCount: blockchain.chain.length,
             cumulativeDifficulty: blockchain.getcumulativeDifficult(),
-            confirmedTransactions: blockchain.confirmedTransactions.length,
+            confirmedTransactions: blockchain.getConfirmedTransactions().length,
             pendingTransactions: blockchain.pendingTransactions.length,
         });
     }
-    
+
     static getDebug(req, res) {
         return res.json({
             selfUrl: req.protocol + '://' + req.get('host'),
             nodeId: blockchain.nodeId,
             coins: global.coins,
             peers: blockchain.peers,
-            transactions: blockchain.confirmedTransactions,
+            transactions: blockchain.getConfirmedTransactions(),
             currentDifficult: blockchain.currentDifficulty,
             blocksCount: blockchain.chain.length,
             cumulativeDifficulty: blockchain.getcumulativeDifficult(),
@@ -43,7 +43,7 @@ class BlockchainController {
         });
     }
 
-    static debugMining({ params: { minerAddress, difficulty }}, res) {
+    static debugMining({ params: { minerAddress, difficulty } }, res) {
         const validator = new Validator([
             {
                 validations: [
@@ -66,7 +66,7 @@ class BlockchainController {
 
         const miningJob = MiningJob.get({ minerAddress, difficulty });
 
-        const minedBlock = MiningJob.createBlockHash({difficulty: parseInt(miningJob.difficulty), blockDataHash: miningJob.blockDataHash});
+        const minedBlock = MiningJob.createBlockHash({ difficulty: parseInt(miningJob.difficulty), blockDataHash: miningJob.blockDataHash });
         const { blockHash, blockDataHash, ...blockHeader } = minedBlock;
 
         const blockCandidate = blockchain.getBlockCandidate(blockDataHash);
@@ -87,8 +87,8 @@ class BlockchainController {
             }
             return res.status(404).json('Block not found or Block already mined.');
         }
-        
-        return res.status(404).json({message: 'Block not found or Block already mined.'});
+
+        return res.status(404).json({ message: 'Block not found or Block already mined.' });
     }
 
 }
