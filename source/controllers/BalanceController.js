@@ -29,7 +29,7 @@ class BalanceController {
 
     static listTransactionForAddress({ params: { address } }, response) {
         let transactions = [
-            /* ...blockChain.confirmedTransactions, */
+            ...blockChain.getConfirmedTransactions(),
             ...blockChain.pendingTransactions
         ].filter(
             transaction =>

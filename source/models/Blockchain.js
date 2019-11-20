@@ -66,7 +66,7 @@ class Blockchain {
     storeBlockCandidate(blockCandidate) {
         this.blockCandidates = { ...this.blockCandidates, ...blockCandidate };
     }
-    
+
     addPendingTransaction(newTransaction) {
         this.pendingTransactions.push(newTransaction);
         this.orderPendingTransaction();
@@ -74,10 +74,10 @@ class Blockchain {
 
     adjustDifficulty(newBlockUnixTime, lastBlockUnixTime) {
         if (this.chain.length > 2) {
-            const blockTimeDif =  BigNumber(newBlockUnixTime).minus(lastBlockUnixTime).toString();
+            const blockTimeDif = BigNumber(newBlockUnixTime).minus(lastBlockUnixTime).toString();
             this.totalBlockTime = BigNumber(this.totalBlockTime).plus(blockTimeDif).toString();
             const averageTime = BigNumber(this.totalBlockTime).dividedBy(this.chain.length);
-            
+
             if (averageTime.isLessThan(5)) {
                 this.currentDifficulty += 1;
             } else if (averageTime.isGreaterThanOrEqualTo(1)) {
@@ -124,6 +124,15 @@ class Blockchain {
         });
     }
 
+    getConfirmedTransactions() {
+        let confirmedTransactions = [];
+
+        this.chain.forEach((block) => {
+            confirmedTransactions = [...confirmedTransactions, ...block.transactions]
+        })
+
+        return confirmedTransactions;
+    }
 }
 
 const blockChain = new Blockchain();
