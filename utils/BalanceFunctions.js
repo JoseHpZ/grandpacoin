@@ -1,7 +1,7 @@
 const Bignumber = require('bignumber.js');
 
-function getAddressBalances(address) {
-    if (!address) {
+function getAddressBalances(addressData) {
+    if (!addressData) {
         return {
             safeBalance: 0,
             confirmedBalance: 0,
@@ -9,14 +9,14 @@ function getAddressBalances(address) {
         }
     }
     return {
-        safeBalance: address.safeBalance,
-        confirmedBalance: address.confirmedBalance,
-        pendingBalance: address.pendingBalance,
+        safeBalance: addressData.safeBalance,
+        confirmedBalance: addressData.confirmedBalance,
+        pendingBalance: addressData.pendingBalance,
     };
 }
 
-function getBignumberAddressBalances(address) {
-    if (!address) {
+function getBignumberAddressBalances(addressData) {
+    if (!addressData) {
         return {
             safeBalance: Bignumber('0'),
             confirmedBalance: Bignumber('0'),
@@ -24,9 +24,9 @@ function getBignumberAddressBalances(address) {
         }
     }
     return {
-        safeBalance: Bignumber(address.safeBalance),
-        confirmedBalance: Bignumber(address.confirmedBalance),
-        pendingBalance: Bignumber(address.pendingBalance),
+        safeBalance: Bignumber(addressData.safeBalance),
+        confirmedBalance: Bignumber(addressData.confirmedBalance),
+        pendingBalance: Bignumber(addressData.pendingBalance),
     };
 }
 

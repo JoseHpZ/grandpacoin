@@ -1,11 +1,12 @@
 const BigNumber = require('bignumber.js');
 const { getBignumberAddressBalances } = require('./BalanceFunctions')
+const ec = new (require('elliptic')).ec('secp256k1');
 
 
 function removeDuplicateSender(transactions) {
     return transactions.filter((transaction, index, self) =>
-        index === self.findIndex((t) => (
-            t.from !== transaction.from
+        index !== self.findIndex((t) => (
+            t.from === transaction.from
         ))
     )
 }
@@ -29,6 +30,7 @@ function processBlockTransactions(transactions) {
 }
 
 function hasFunds(balance, amount) {
+    console.log(balance)
     return balance.confirmedBalance.isGreaterThanOrEqualTo(amount) && hasPendingBalance(balance, amount);
 }
 
@@ -49,13 +51,22 @@ function getTransactionsFee(transactions) {
  * @param {array} pendingTransactions
  * filter transaction without funds to pay the transaction fee
  */
-function removeTransactionWithoutFunds(pendingTransactions) {
+function removeTransactionWithoutFunds(pendingTransactions, addresses) {
     return pendingTransactions.filter(transaction => 
-        hasFunds(
-            getBignumberAddressBalances(transaction.from),
-            BigNumber(transaction.fee)
-        )
+        getBignumberAddressBalances(
+            addresses[transaction.from]
+        ).confirmedBalance.isGreaterThanOrEqualTo(transaction.fee)
     )
+}
+
+function compressPublicKey(pubKeyCompressed) {
+    const publicKeyCompressed = pubKeyCompressed.replace('0x', '');
+    return `${publicKeyCompressed.substr(64, 65) === '0' ? '02' : '03'}${publicKeyCompressed.substr(0, 64)}`
+}
+
+function verifySignature (data, publicKey, signature) {
+    const keyPair = ec.keyFromPublic(compressPublicKey(publicKey), 'hex');
+    return keyPair.verify(data, { r: signature[0], s: signature[1] })
 }
 
 module.exports = {
@@ -65,4 +76,5 @@ module.exports = {
     hasFunds,
     getTransactionsFee,
     removeTransactionWithoutFunds,
+    verifySignature,
 }

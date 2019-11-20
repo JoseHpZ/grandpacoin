@@ -15,53 +15,14 @@ class Blockchain {
 
     initBlockchain() {
         this.chain = [];
-        this.pendingTransactions = [
-            {
-                "from": "0xb392c5549575088f096DAd01e0a89bd6DA116bA2",
-                "to": "0xb392c5549575088f096DAd01e0a89bd6DA116bA0",
-                "data": "sdsdfsd",
-                "fee": "44",
-                "value": "21",
-                "senderPubKey": "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8af",
-                "senderSignature": [
-                    "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8a",
-                    "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8f"
-                ]
-            },
-            {
-                "from": "0xb392c5549575088f096DAd01e0a89bd6DA116bA2",
-                "to": "0xb392c5549575088f096DAd01e0a89bd6DA116bA0",
-                "data": "sdsdfsd",
-                "fee": "22",
-                "value": "80",
-                "senderPubKey": "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8af",
-                "senderSignature": [
-                    "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8a",
-                    "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8f"
-                ]
-            },
-            {
-                "from": "0xb392c5549575088f096DAd01e0a89bd6DA116bA1",
-                "to": "0xb392c5549575088f096DAd01e0a89bd6DA116bA0",
-                "data": "sdsdfsd",
-                "fee": "15",
-                "value": "20",
-                "senderPubKey": "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8af",
-                "senderSignature": [
-                    "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8a",
-                    "8da4ef21b864d2cc526dbdb2a120bd2874c36c9d0a1fb7f8c63d7f7a8b41de8f"
-                ]
-            }
-        ];
+        this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
         this.addresses = {
-
-            'b392c5549575088f096DAd01e0a89bd6DA116bA2': {
+            '999067568fed3f20dd265413e70f48a060dad93c': {
                 confirmedBalance: '50000',
                 safeBalance: '50000',
                 pendingBalance: '0',
             },
-        
         };
         this.addressesIds = [];
         this.blockNumber = 0;
@@ -135,11 +96,10 @@ class Blockchain {
     }
 
     removeInvalidPendingTransactions() {
-        this.pendingTransactions = removeTransactionWithoutFunds(this.pendingTransactions);
-        console.log('this.pendingTransactions', this.pendingTransactions)
+        this.pendingTransactions = removeTransactionWithoutFunds(this.pendingTransactions, this.addresses);
     }
 
-    getAddress(address) {
+    getAddressData(address) {
         return this.addresses[address];
     }
 
