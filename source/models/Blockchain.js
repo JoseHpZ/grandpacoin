@@ -1,6 +1,7 @@
 const { generateNodeId } = require('../../utils/functions');
 const Block = require('./Block');
-const Bignumber = require('bignumber.js');
+const BigNumber = require('bignumber.js');
+const moment = require('moment');
 
 
 class Blockchain {
@@ -14,17 +15,12 @@ class Blockchain {
         this.chain = [];
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
-        this.addresses = {
-            'b392c5549575088f096DAd01e0a89bd6DA116bA2': {
-                confirmedBalance: '50000',
-                safeBalance: '50000',
-                pendingBalance: '0',
-            },
-        };
+        this.addresses = {};
         this.addressesIds = [];
         this.chain.push(Block.getGenesisBlock());
         this.blockNumber = 0;
         this.blockCandidates = {};
+        this.totalBlockTime = 0;
     }
 
     getTransactionByHash(hash) {
@@ -48,7 +44,10 @@ class Blockchain {
     }
 
     addBlock(newBlock) {
+        const lastBlockUnixTime = moment(this.getLastBlock().dateCreated).unix().toString();
         this.chain.push(newBlock);
+        const newBlockUnixTime = moment(newBlock.dateCreated).unix();
+        this.adjustDifficulty(newBlockUnixTime, lastBlockUnixTime);
         this.blockCandidates = {};
     }
 
@@ -65,12 +64,30 @@ class Blockchain {
         this.orderPendingTransaction();
     }
 
+    adjustDifficulty(newBlockUnixTime, lastBlockUnixTime) {
+        if (this.chain.length > 2) {
+            const blockTimeDif =  BigNumber(newBlockUnixTime).minus(lastBlockUnixTime).toString();
+            this.totalBlockTime = BigNumber(this.totalBlockTime).plus(blockTimeDif).toString();
+            const averageTime = BigNumber(this.totalBlockTime).dividedBy(this.chain.length);
+            
+            if (averageTime.isLessThan(5)) {
+                this.currentDifficulty += 1;
+            } else if (averageTime.isGreaterThanOrEqualTo(1)) {
+                this.currentDifficulty -= 1;
+            }
+        }
+    }
+
+    getLastBlock() {
+        return this.chain[this.chain.length - 1];
+    }
+
     orderPendingTransaction() {
         this.pendingTransactions.sort(function (transactionA, transactionB) {
-            if (Bignumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
+            if (BigNumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
                 return -1;
             }
-            if (Bignumber(transactionA.fee).isLessThan(transactionB.fee)) {
+            if (BigNumber(transactionA.fee).isLessThan(transactionB.fee)) {
                 return 1;
             }
             return 0;
