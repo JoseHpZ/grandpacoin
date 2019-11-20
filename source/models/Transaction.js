@@ -6,7 +6,7 @@ const TRANSACTION_STATUS = {
 };
 
 class Transaction {
-    constructor({ from, to, value, fee, senderPubKey, data, senderSignature }) {
+    constructor({ from, to, value, fee, senderPubKey, data, senderSignature, dateCreated }) {
         this.from = from;
         this.to = to;
         this.value = value;
@@ -14,7 +14,7 @@ class Transaction {
         this.senderPubKey = senderPubKey;
         this.data = data.trim();
         this.senderSignature = senderSignature;
-        this.dateCreated = new Date().toISOString();
+        this.dateCreated = dateCreated;
     }
 
     getData() {
@@ -79,7 +79,7 @@ class Transaction {
         }))
     }
 
-    static getCoinbaseTransaction({ to, value, data, minedInBlockIndex }) {
+    static getCoinbaseTransaction({ to, value, data }) {
         const from = '0000000000000000000000000000000000000000',
             senderPubKey = '00000000000000000000000000000000000000000000000000000000000000000',
             senderSignature = [
@@ -107,7 +107,6 @@ class Transaction {
                 dateCreated
             }),
             senderSignature,
-            minedInBlockIndex
         }
     }
 }
