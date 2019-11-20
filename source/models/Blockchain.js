@@ -18,7 +18,7 @@ class Blockchain {
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
         this.addresses = {
-            '999067568fed3f20dd265413e70f48a060dad93c': {
+            'f88b3515440b9fa31579f53eb750f16380f01801': {
                 confirmedBalance: '50000',
                 safeBalance: '50000',
                 pendingBalance: '0',

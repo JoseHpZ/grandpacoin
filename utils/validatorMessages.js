@@ -11,4 +11,5 @@ module.exports = {
     isValidTransactionHash: 'The @input must be a valid transaction hash.',
     isValidAddress: 'The @input must be a valid address.',
     isValidUrl: 'The @input is not valid',
+    date: 'The @input must be a valid date.',
 };

@@ -1,6 +1,11 @@
 const BigNumber = require('bignumber.js');
 const { getBignumberAddressBalances } = require('./BalanceFunctions')
 const ec = new (require('elliptic')).ec('secp256k1');
+const {
+    rewardBalace, newSenderBalance,
+    newReceiverBalance, payFeeOnFailTransaction,
+    subtractPendingReceiverBalance,
+} = require('./BalanceFunctions');
 
 
 function removeDuplicateSender(transactions) {
@@ -30,7 +35,6 @@ function processBlockTransactions(transactions) {
 }
 
 function hasFunds(balance, amount) {
-    console.log(balance)
     return balance.confirmedBalance.isGreaterThanOrEqualTo(amount) && hasPendingBalance(balance, amount);
 }
 
@@ -69,6 +73,50 @@ function verifySignature (data, publicKey, signature) {
     return keyPair.verify(data, { r: signature[0], s: signature[1] })
 }
 
+function varifyAndGenerateBalances(blockCandidate, newBlock, blockchain) {
+    let transactions = [];
+    newBlock.transactions.forEach((transaction, index) => {
+        // block reward transaction
+        if (index === 0) {
+            const minerBalances = getBignumberAddressBalances(
+                blockchain.getAddressData(newBlock.minedBy)
+            );
+            console.log('minerBalances: ', minerBalances)
+            blockchain.setAddressData(
+                newBlock.minedBy,
+                rewardBalace(minerBalances, blockCandidate.expectedReward)
+            );
+            transactions.push({
+                ...transaction,
+                minedInBlockIndex: newBlock.index,
+                transferSuccessful: true,
+            });
+            return;
+        }
+        const totalAmount = BigNumber(transaction.value).plus(transaction.fee);
+        const fromBalances = getBignumberAddressBalances(
+            blockchain.getAddressData(transaction.from)
+        );
+        const toBalances = getBignumberAddressBalances(
+            blockchain.getAddressData(transaction.to)
+        );
+        let success = false;
+        if (hasFunds(fromBalances, totalAmount)) {
+            success = true;
+            blockchain.setAddressData(transaction.from, newSenderBalance(fromBalances, totalAmount));
+            blockchain.setAddressData(transaction.to, newReceiverBalance(toBalances, transaction.value));
+        } else {
+            blockchain.setAddressData(transaction.from, payFeeOnFailTransaction(fromBalances, fee, value));
+            blockchain.setAddressData(transaction.to, subtractPendingReceiverBalance(toBalances, value));
+        }
+        transactions.push({
+            ...transaction,
+            minedInBlockIndex: newBlock.index,
+            transferSuccessful: success,
+        })
+    });
+}
+
 module.exports = {
     processBlockTransactions,
     clearSingleTransactionData,
@@ -77,4 +125,5 @@ module.exports = {
     getTransactionsFee,
     removeTransactionWithoutFunds,
     verifySignature,
+    varifyAndGenerateBalances,
 }
