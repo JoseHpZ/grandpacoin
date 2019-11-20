@@ -10,10 +10,10 @@ class Block extends GranpaCoin {
             .update(JSON.stringify(blockObject))
             .digest('hex');
     }
-    static getGenesisBlock() {
+    static getGenesisBlock(transactions) {
         return Block.getBlockObject({
             index: 0,
-            transactions: [Transaction.genesisTransaction()],
+            transactions: [transactions],
             difficulty: 0,
             prevBlockHash: '0',
             minedBy: '00000000000000000000000000000000',

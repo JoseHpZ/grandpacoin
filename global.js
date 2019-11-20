@@ -1,5 +1,5 @@
 global.appName = 'GrandpaCoin/0.1';
-global.initialDifficulty = 4;
+global.initialDifficulty = 5;
 global.time = 8;
 global.coins = {
     grandpa: 1000000,

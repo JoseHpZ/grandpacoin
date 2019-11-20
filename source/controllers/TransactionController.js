@@ -1,10 +1,10 @@
 const {
     getBignumberAddressBalances,
-    getNewSenderPendingBalance,
-    getNewReceiverPendingBalance,
+    newSenderPendingBalance,
+    newReceiverPendingBalance,
 } = require('../../utils/BalanceFunctions');
 const { unprefixedAddress } = require('../../utils/functions');
-const { hasFunds } = require('../../utils/transactionFunctions');
+const { hasFunds, verifySignature } = require('../../utils/transactionFunctions');
 const blockChain = require("../models/Blockchain");
 const Transaction = require("../models/Transaction");
 const Bignumber = require('bignumber.js');
@@ -46,8 +46,8 @@ class TransactionController {
             data,
             senderSignature,
         } = body;
-        let from = unprefixedAddress(body.from);
-        let to = unprefixedAddress(body.to);
+        const from = unprefixedAddress(body.from);
+        const to = unprefixedAddress(body.to);
         const validator = new Validator([
             {
                 validations: ['string'],
@@ -87,14 +87,14 @@ class TransactionController {
                 value: senderSignature
             },
         ]);
-
+        
         if (validator.validate().hasError()) {
             return response
                 .status(400)
                 .json(validator.getErrors());
         }
-
-        const senderAddressBalances = getBignumberAddressBalances(blockChain.addresses[from]);
+        
+        const senderAddressBalances = getBignumberAddressBalances(blockChain.getAddressData(from));
         const totalAmount = Bignumber(value).plus(fee);
         if (!hasFunds(senderAddressBalances, totalAmount)) {
             return response
@@ -112,19 +112,32 @@ class TransactionController {
             senderPubKey,
             data,
             senderSignature: senderSignature,
+            dateCreated: '2019-11-16T22:34:24.564Z'
         }).getData();
+        console.log('newTransaction', newTransaction)
+        // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
+        //     return response
+        //         .status(400)
+        //         .json({
+        //             message: "Trasaction signature verification invalid."
+        //         });
+        // }
+
+        // add new pending transaction
         blockChain.addPendingTransaction(newTransaction);
         // new from pending balance
-        blockChain.addresses[from] = {
-            ...blockChain.addresses[from],
-            pendingBalance: getNewSenderPendingBalance(senderAddressBalances, totalAmount),
-        };
+        blockChain.setAddressData(from, {
+            ...blockChain.getAddressData(from),
+            pendingBalance: newSenderPendingBalance(senderAddressBalances, totalAmount),
+        });
         // new to pending balance
-        const receiverAddressBalances = getBignumberAddressBalances(blockChain.addresses[to]);
-        blockChain.addresses[to] = {
-            ...blockChain.addresses[to],
-            pendingBalance: getNewReceiverPendingBalance(receiverAddressBalances, totalAmount),
-        };
+        const receiverAddressBalances = getBignumberAddressBalances(blockChain.getAddressData(to));
+        blockChain.setAddressData(to, {
+            ...blockChain.getAddressData(to),
+            safeBalance: receiverAddressBalances.safeBalance.toString(),
+            confirmedBalance: receiverAddressBalances.confirmedBalance.toString(),
+            pendingBalance: newReceiverPendingBalance(receiverAddressBalances, value),
+        });
         return response.json(newTransaction);
     }
 }
