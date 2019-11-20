@@ -11,10 +11,10 @@ class Transaction {
         this.to = to;
         this.value = value;
         this.fee = fee;
-        this.senderPubKey = senderPubKey;
-        this.data = data ? data.trim() : null;
-        this.senderSignature = senderSignature;
         this.dateCreated = dateCreated;
+        this.data = data ? data.trim() : null;
+        this.senderPubKey = senderPubKey;
+        this.senderSignature = senderSignature;
     }
 
     getData() {
