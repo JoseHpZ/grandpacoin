@@ -55,7 +55,7 @@ class Blockchain {
         const lastBlockUnixTime = moment(this.getLastBlock().dateCreated).unix().toString();
         this.chain.push(newBlock);
         const newBlockUnixTime = moment(newBlock.dateCreated).unix();
-        this.adjustDifficulty(newBlockUnixTime, lastBlockUnixTime);
+        // this.adjustDifficulty(newBlockUnixTime, lastBlockUnixTime);
         this.blockCandidates = {};
     }
 

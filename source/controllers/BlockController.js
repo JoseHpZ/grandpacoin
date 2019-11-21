@@ -54,10 +54,16 @@ class BlockController {
         return res.status(404).json({message: 'Block not found or Block already mined.'});
     }
 
-    static getBlocks({ res }) {
+    static getBlocks(req, res) {
+        let blocks;
+        if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
+            blocks = blockchain.chain.slice(-3).reverse();
+        } else {
+            blocks = blockchain.chain.reverse();
+        }
         return res
             .status(200)
-            .json(blockchain.chain);
+            .json(blocks);
     }
 
     static getBlockByIndex(req, response) {
