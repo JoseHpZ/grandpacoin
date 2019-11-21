@@ -1,31 +1,25 @@
-const { getAddressBalances } = require('../../utils/BalanceFunctions');
-const blockChain = require("../models/Blockchain");
+// const blockChain = require("../models/Blockchain");
+const Address = require('../models/Address');
 const { isValidAddress } = require('../../utils/functions');
+
 
 class BalanceController {
     static getAddressesBalances(req, res) {
-        let confirmedBalances = {};
-
-        Object.keys(blockChain.addresses).forEach(key => {
-            if (blockChain.addresses[key].confirmedBalance > 0) {
-                confirmedBalances = { ...confirmedBalances, ...{ [key]: blockChain.addresses[key].confirmedBalance } }
-            }
-        })
-
-        return res.status(200).send(confirmedBalances);
+        if (blockChain.addresses.length > 0) {
+            return res.json(
+                blockChain.addresses
+                    .filter(({ confirmedBalance }) => confirmedBalance !== 0)
+                    
+                    .map(({ address, safeBalance }) => ({ [address]: safeBalance} ))
+            );
+        }
+        return res.json({ message: "No addresses found." });
     }
 
     static getAllBalancesForAddress({ params: { address }, res }) {
         if (!isValidAddress(address))
             return response.status(400).json({ message: 'Invalid address.' });
-
-        const addressBalance = getAddressBalances(blockChain.addresses[address]);
-
-        if (!addressBalance) {
-            return response.status(400).json({ message: 'Invalid address, or does not exists.' });
-        }
-
-        return res.status(200).json(addressBalance);
+        return res.status(200).json(new Address(address).getStringBalances());
     }
 
     static listTransactionForAddress({ params: { address } }, response) {

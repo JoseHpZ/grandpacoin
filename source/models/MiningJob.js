@@ -2,6 +2,8 @@ const blockchain = require('../models/Blockchain');
 const Block = require('../models/Block');
 const BigNumber = require('bignumber.js');
 const crypto = require('crypto');
+const { removeDuplicateSender } = require('../../utils/transactionFunctions');
+
 
 class MiningJob {
 
@@ -38,7 +40,7 @@ class MiningJob {
             index: blockchain.chain.length,
             prevBlockHash: blockchain.chain[blockchain.chain.length - 1].blockHash,
             difficulty,
-            transactions: blockchain.pendingTransactions,
+            transactions: removeDuplicateSender(blockchain.pendingTransactions),
             minedBy: minerAddress
         });
         const { miningJob, ...blockCandidate } = block;

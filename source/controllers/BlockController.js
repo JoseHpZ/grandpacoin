@@ -1,9 +1,9 @@
 const { unprefixedAddress } = require('../../utils/functions');
-const { removeDuplicateSender, varifyAndGenerateBalances } = require('../../utils/transactionFunctions');
+const { removeDuplicateSender } = require('../../utils/transactionFunctions');
 const Validator = require('../../utils/Validator');
 const blockchain = require('../models/Blockchain');
 const Block = require('../models/Block');
-const BigNumber = require('bignumber.js');
+const Address = require('../models/Address');
 
 
 class BlockController {
@@ -44,7 +44,7 @@ class BlockController {
         });
 
         if (newBlock.blockHash === blockHash && (newBlock.index === blockchain.getLastBlock().index + 1)) {
-            const transactions = varifyAndGenerateBalances(newBlock, blockchain);
+            const transactions = Address.varifyGetAndGenerateBalances(newBlock);
             blockchain.addBlock({ ...newBlock, transactions });
             return res.status(200).json({
                 message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
