@@ -12,8 +12,14 @@ class TransactionController {
         return res.status(200).json(blockchain.pendingTransactions);
     }
 
-    static getConfirmedTransactions({ res }) {
-        return res.status(200).json(blockchain.confirmedTransactions);
+    static getConfirmedTransactions(req, res ) {
+        let transactions;
+        if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
+            transactions = blockChain.getConfirmedTransactions().slice(-3).reverse();
+        } else {
+            transactions = blockChain.getConfirmedTransactions();
+        }
+        return res.status(200).json(transactions);
     }
 
     static getTransactionByHash({ params: { hash } }, response) {
@@ -43,7 +49,7 @@ class TransactionController {
             senderSignature,
             dateCreated,
         } = body;
-        let { from , to } = body;
+        let { from, to } = body;
         const validator = new Validator([
             {
                 validations: ['string'],
@@ -51,7 +57,7 @@ class TransactionController {
                 value: data,
             },
             {
-                validations: ['required','string'],
+                validations: ['required', 'string'],
                 name: 'value',
                 value,
             },
@@ -123,6 +129,14 @@ class TransactionController {
                 message: 'Transaction already exists.',
             });
         }
+        // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
+        //     return response
+        //         .status(400)
+        //         .json({
+        //             message: "Trasaction signature verification invalid."
+        //         });
+        // }
+
         // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
         //     return response
         //         .status(400)
