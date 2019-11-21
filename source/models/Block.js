@@ -24,8 +24,8 @@ class Block extends GranpaCoin {
     }
     static getCandidateBlock({index, prevBlockHash, difficulty, transactions: pendingTransactions, minedBy}) {
         const transactions = [...pendingTransactions];
-        const minerReward = getTransactionsFee(transactions);
-        const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value: minerReward, data: 'coinbase tx', minedInBlockIndex: index});
+        const expectedReward = BigNumber(global.blockReward).plus(getTransactionsFee(transactions)).toString();
+        const coinbaseTransaction = Transaction.getCoinbaseTransaction({to: minedBy, value:  expectedReward, data: 'coinbase tx', minedInBlockIndex: index});
         clearSingleTransactionData(coinbaseTransaction);
         transactions.unshift(coinbaseTransaction);
 
@@ -35,7 +35,7 @@ class Block extends GranpaCoin {
                 index,
                 transactionsIncluded: transactions.length,
                 difficulty,
-                expectedReward: BigNumber(global.blockReward).plus(minerReward).toString(),
+                expectedReward: expectedReward,
                 rewardAddress: minedBy,
                 blockDataHash
             },
@@ -46,7 +46,7 @@ class Block extends GranpaCoin {
                 prevBlockHash: prevBlockHash,
                 minedBy,
                 blockDataHash,
-                expectedReward: BigNumber(global.blockReward).plus(minerReward).toString(),
+                expectedReward: expectedReward,
             }
         }
     }

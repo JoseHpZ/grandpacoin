@@ -1,5 +1,7 @@
-const { getAddressBalances } = require('../../utils/BalanceFunctions');
-const blockChain = require("../models/Blockchain");
+// const blockChain = require("../models/Blockchain");
+const Address = require('../models/Address');
+const { isValidAddress } = require('../../utils/functions');
+
 
 class BalanceController {
     static getAddressesBalances(req, res) {
@@ -7,6 +9,7 @@ class BalanceController {
             return res.json(
                 blockChain.addresses
                     .filter(({ confirmedBalance }) => confirmedBalance !== 0)
+                    
                     .map(({ address, safeBalance }) => ({ [address]: safeBalance} ))
             );
         }
@@ -16,14 +19,7 @@ class BalanceController {
     static getAllBalancesForAddress({ params: { address }, res }) {
         if (!isValidAddress(address))
             return response.status(400).json({ message: 'Invalid address.' });
-        
-        const addressBalance = getAddressBalances(blockChain.addresses[address]);
-
-        if (!addressBalance) {
-            return response.status(400).json({ message: 'Invalid address, or does not exists.' });
-        }
-
-        return res.status(200).json(addressBalance);
+        return res.status(200).json(new Address(address).getStringBalances());
     }
 
     static listTransactionForAddress({ params: { address } }, response) {

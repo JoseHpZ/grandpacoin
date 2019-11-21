@@ -1,9 +1,6 @@
 const { sha256 } = require('../../utils/hashes');
+const BigNumber = require('bignumber.js');
 
-const TRANSACTION_STATUS = {
-    'pending': 'pending',
-    'confirmed': 'confirmed',
-};
 
 class Transaction {
     constructor({ from, to, value, fee, senderPubKey, data, senderSignature, dateCreated }) {
