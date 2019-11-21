@@ -30,9 +30,8 @@ class BlockchainController {
     }
 
     static getDebug(req, res) {
-        // Address.calculateBlockchainBalances();
         return res.json({
-            addresses: blockchain.addresses,
+            addresses: Address.getAddressesBalances(),
             chain: blockchain.chain,
             selfUrl: req.protocol + '://' + req.get('host'),
             nodeId: blockchain.nodeId,
