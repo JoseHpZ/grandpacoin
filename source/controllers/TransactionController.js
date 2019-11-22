@@ -22,6 +22,15 @@ class TransactionController {
         return res.status(200).json(transactions);
     }
 
+    static getAllTransactions({res}) {
+        const transactions = blockchain.getConfirmedTransactions().concat(blockchain.pendingTransactions)
+            .sort((actual, next) => {
+                return Date.parse(next.dateCreated) - Date.parse(actual.dateCreated);
+            });
+
+        return res.json(transactions)
+    }
+
     static getTransactionByHash({ params: { hash } }, response) {
         const validation = new Validator([{
             validations: ['isValidTransactionHash'],
@@ -105,13 +114,13 @@ class TransactionController {
         
         const senderAddress = Address.find(from);
         const totalAmount = Bignumber(value).plus(fee);
-        if (!senderAddress.hasFunds(totalAmount)) {
-            return response
-                .status(400)
-                .json({
-                    message: "Balance is not enough to generate transaction."
-                });
-        }
+        // if (!senderAddress.hasFunds(totalAmount)) {
+        //     return response
+        //         .status(400)
+        //         .json({
+        //             message: "Balance is not enough to generate transaction."
+        //         });
+        // }
         
         const newTransaction = new Transaction({
             from,

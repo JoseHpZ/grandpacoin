@@ -117,9 +117,11 @@ class Blockchain {
     getConfirmedTransactions() {
         let confirmedTransactions = [];
 
-        this.chain.forEach((block) => {
-            confirmedTransactions = [...confirmedTransactions, ...block.transactions]
-        })
+        this.chain.forEach(block => {
+            block.transactions.forEach(transaction => {
+                confirmedTransactions.push(transaction);
+            });
+        });
 
         return confirmedTransactions;
     }

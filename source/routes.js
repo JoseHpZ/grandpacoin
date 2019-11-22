@@ -17,6 +17,7 @@ module.exports = (router) => {
     router.get('/transactions/confirmed', TransactionController.getConfirmedTransactions);
     router.get('/transaction/:hash', TransactionController.getTransactionByHash);
     router.post('/transactions/send', TransactionController.sendTransaction);
+    router.get('/transactions', TransactionController.getAllTransactions);
     // balances
     router.get('/balances', BalanceController.getAddressesBalances);
     router.get('/address/:address/transactions', BalanceController.listTransactionForAddress);
