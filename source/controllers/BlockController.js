@@ -57,9 +57,9 @@ class BlockController {
     static getBlocks(req, res) {
         let blocks;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
-            blocks = blockchain.chain.slice(-3).reverse();
+            blocks = blockchain.chain.slice(-3);
         } else {
-            blocks = blockchain.chain.reverse();
+            blocks = blockchain.chain;
         }
         return res
             .status(200)
@@ -73,6 +73,15 @@ class BlockController {
                 .json({ message: 'Block not found' });
         }
         return response.json(blockchain.chain[req.params.index]);
+    }
+
+    static getBlockByHash(req, res) {
+        const block = blockchain.chain.find(block => block.blockHash === req.params.hash)
+        if (block) {
+            return res.json(block);
+        } else {
+            return res.status(404).json({message: 'Block not found.'});
+        }
     }
 }
 

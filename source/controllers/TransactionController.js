@@ -15,11 +15,18 @@ class TransactionController {
     static getConfirmedTransactions(req, res ) {
         let transactions;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
-            transactions = blockChain.getConfirmedTransactions().slice(-3).reverse();
+            transactions = blockchain.getConfirmedTransactions().slice(-3);
         } else {
-            transactions = blockChain.getConfirmedTransactions();
+            transactions = blockchain.getConfirmedTransactions();
         }
         return res.status(200).json(transactions);
+    }
+
+    static getAllTransactions({res}) {
+        const transactions = blockchain.getConfirmedTransactions().concat(blockchain.pendingTransactions)
+            .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated));
+
+        return res.json(transactions)
     }
 
     static getTransactionByHash({ params: { hash } }, response) {
@@ -105,13 +112,13 @@ class TransactionController {
         
         const senderAddress = Address.find(from);
         const totalAmount = Bignumber(value).plus(fee);
-        if (!senderAddress.hasFunds(totalAmount)) {
-            return response
-                .status(400)
-                .json({
-                    message: "Balance is not enough to generate transaction."
-                });
-        }
+        // if (!senderAddress.hasFunds(totalAmount)) {
+        //     return response
+        //         .status(400)
+        //         .json({
+        //             message: "Balance is not enough to generate transaction."
+        //         });
+        // }
         
         const newTransaction = new Transaction({
             from,
