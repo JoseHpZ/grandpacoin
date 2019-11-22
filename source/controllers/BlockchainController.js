@@ -15,18 +15,7 @@ class BlockchainController {
     }
 
     static getInfo(req, res) {
-        return res.json({
-            about: global.appName,
-            nodeId: blockchain.nodeId,
-            peers: blockchain.peers,
-            chainId: blockchain.chain[0].blockHash,
-            nodeUrl: req.protocol + '://' + req.get('host'),
-            currentDifficult: blockchain.currentDifficulty,
-            blocksCount: blockchain.chain.length,
-            cumulativeDifficulty: blockchain.getcumulativeDifficult(),
-            confirmedTransactions: blockchain.getConfirmedTransactions().length,
-            pendingTransactions: blockchain.pendingTransactions.length,
-        });
+        return res.json(blockchain.getInfo());
     }
 
     static getDebug(req, res) {

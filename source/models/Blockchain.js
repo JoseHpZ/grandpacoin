@@ -116,18 +116,43 @@ class Blockchain {
 
     getConfirmedTransactions() {
         let confirmedTransactions = [];
-
         this.chain.forEach((block) => {
             confirmedTransactions = [...confirmedTransactions, ...block.transactions]
         })
-
         return confirmedTransactions;
     }
+
     filterTransfersPendingTransactions(transactions) {
         this.pendingTransactions = removePendingTransactions(this.pendingTransactions, transactions);
     }
-
     
+    getInfo() {
+        return {
+            about: global.appName,
+            nodeId: this.nodeId,
+            peers: this.peers,
+            chainId: this.chain[0].blockHash,
+            currentDifficult: this.currentDifficulty,
+            blocksCount: this.chain.length,
+            cumulativeDifficulty: this.getcumulativeDifficult(),
+            confirmedTransactions: this.getConfirmedTransactions().length,
+            pendingTransactions: this.pendingTransactions.length,
+        }
+    }
+
+    needSyncronization(cumulativeDifficult) {
+        BigNumber(cumulativeDifficult).isGreaterThan(this.getcumulativeDifficult())
+    }
+
+    addPeer(peerInfo) {
+        this.peers[peerInfo.nodeId] = {
+            ...peerInfo,
+        }
+    }
+
+    removePeer(nodeId) {
+        delete this.peers[nodeId];
+    }
 }
 
 const blockChain = new Blockchain();
