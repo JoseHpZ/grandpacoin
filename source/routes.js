@@ -26,6 +26,7 @@ module.exports = (router) => {
     router.post('/mining/submit-mined-block', BlockController.getSubmittedBlock);
     router.get('/blocks', BlockController.getBlocks);
     router.get('/blocks/:index', BlockController.getBlockByIndex);
+    router.get('/block/:hash', BlockController.getBlockByHash);
     // Peers routes
     router.get('/peers', PeersController.getConnectedPeers);
     router.post('/peers/connect', PeersController.connectPeer);
