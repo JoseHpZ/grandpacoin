@@ -24,9 +24,7 @@ class TransactionController {
 
     static getAllTransactions({res}) {
         const transactions = blockchain.getConfirmedTransactions().concat(blockchain.pendingTransactions)
-            .sort((actual, next) => {
-                return Date.parse(next.dateCreated) - Date.parse(actual.dateCreated);
-            });
+            .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated));
 
         return res.json(transactions)
     }
