@@ -116,7 +116,6 @@ class Address {
             this.safeBalance = this.confirmedBalance;
         else
             this.safeBalance = newSafe;
-        console.log(this.safeBalance)
         this.updateChain();
     }
 
@@ -194,8 +193,8 @@ class Address {
     }
 
     static checkSafeBalances(blockIndex) {
-        console.clear()
-        console.log('******************************************')
+        // console.clear()
+        // console.log('******************************************')
         blockchain.chain[blockIndex - 6].transactions.forEach((transaction) => {
              Address.find(transaction.to).alterSafeBalance(transaction.value);
         });
