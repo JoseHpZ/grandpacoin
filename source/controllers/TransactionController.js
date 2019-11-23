@@ -39,6 +39,7 @@ class TransactionController {
     }
 
     static sendTransaction({ body }, response) {
+        body = typeof body === 'string' ? JSON.parse(body) : body;
         const {
             value,
             fee,
@@ -121,7 +122,7 @@ class TransactionController {
             senderSignature: senderSignature,
             dateCreated,
         }).getData();
-
+        console.log('tx', newTransaction.transactionDataHash)
         if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
             return response
                 .status(400)
