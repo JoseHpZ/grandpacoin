@@ -2,7 +2,7 @@ const { generateNodeId } = require('../../utils/functions');
 const Block = require('./Block');
 const BigNumber = require('bignumber.js');
 const moment = require('moment');
-const { removeTransactionWithoutFunds } = require('../../utils/transactionFunctions')
+const { removeTransactionWithoutFunds, removePendingTransactions } = require('../../utils/transactionFunctions')
 const Transaction = require('./Transaction');
 
 
@@ -17,13 +17,7 @@ class Blockchain {
         this.chain = [];
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
-        this.addresses = {
-            'f88b3515440b9fa31579f53eb750f16380f01801': {
-                confirmedBalance: '50000',
-                safeBalance: '50000',
-                pendingBalance: '0',
-            },
-        };
+        this.addresses = {};
         this.addressesIds = [];
         this.blockNumber = 0;
         this.blockCandidates = {};
@@ -55,7 +49,7 @@ class Blockchain {
         const lastBlockUnixTime = moment(this.getLastBlock().dateCreated).unix().toString();
         this.chain.push(newBlock);
         const newBlockUnixTime = moment(newBlock.dateCreated).unix();
-        this.adjustDifficulty(newBlockUnixTime, lastBlockUnixTime);
+        // this.adjustDifficulty(newBlockUnixTime, lastBlockUnixTime);
         this.blockCandidates = {};
     }
 
@@ -92,7 +86,7 @@ class Blockchain {
 
     orderPendingTransaction() {
         this.pendingTransactions.sort(function (transactionA, transactionB) {
-            if (BigNumber(transactionA.fee).isGreaterThan(transactionB.fee)) {
+            if (BigNumber(transactionA.fee).isGreaterThan(transactionB.fee) || BigNumber(transactionA.value).isGreaterThan(transactionB.value)) {
                 return -1;
             }
             if (BigNumber(transactionA.fee).isLessThan(transactionB.fee)) {
@@ -106,10 +100,6 @@ class Blockchain {
         this.pendingTransactions = removeTransactionWithoutFunds(this.pendingTransactions, this.addresses);
     }
 
-    getAddressData(address) {
-        return this.addresses[address];
-    }
-
     setAddressData(address, data) {
         this.addresses[address] = data;
     }
@@ -118,7 +108,7 @@ class Blockchain {
         const faucetTransaction = Transaction.genesisTransaction();
         this.chain.push(Block.getGenesisBlock(faucetTransaction));
         this.setAddressData(faucetTransaction.to, {
-            safeBalance: faucetTransaction.value,
+            safeBalance: '0',
             confirmedBalance: faucetTransaction.value,
             pendingBalance: '0',
         });
@@ -126,12 +116,42 @@ class Blockchain {
 
     getConfirmedTransactions() {
         let confirmedTransactions = [];
-
         this.chain.forEach((block) => {
             confirmedTransactions = [...confirmedTransactions, ...block.transactions]
         })
-
         return confirmedTransactions;
+    }
+
+    filterTransfersPendingTransactions(transactions) {
+        this.pendingTransactions = removePendingTransactions(this.pendingTransactions, transactions);
+    }
+    
+    getInfo() {
+        return {
+            about: global.appName,
+            nodeId: this.nodeId,
+            peers: this.peers,
+            chainId: this.chain[0].blockHash,
+            currentDifficult: this.currentDifficulty,
+            blocksCount: this.chain.length,
+            cumulativeDifficulty: this.getcumulativeDifficult(),
+            confirmedTransactions: this.getConfirmedTransactions().length,
+            pendingTransactions: this.pendingTransactions.length,
+        }
+    }
+
+    needSyncronization(cumulativeDifficult) {
+        BigNumber(cumulativeDifficult).isGreaterThan(this.getcumulativeDifficult())
+    }
+
+    addPeer(peerInfo) {
+        this.peers[peerInfo.nodeId] = {
+            ...peerInfo,
+        }
+    }
+
+    removePeer(nodeId) {
+        delete this.peers[nodeId];
     }
 }
 

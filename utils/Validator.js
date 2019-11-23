@@ -1,8 +1,6 @@
 const messages = require('./validatorMessages');
 const ValidatorRules = require('./ValidatorRules');
-const isObject = function(a) {
-    return (!!a) && (a.constructor === Object);
-};
+
 
 class Validator extends ValidatorRules {
     constructor(data, message = null) {
@@ -150,20 +148,10 @@ class Validator extends ValidatorRules {
     }
 
     check(validation, value) {
-        // if (isObject(validation)) { // check if the validation is an object
-        //     switch (validation.name) {
-        //         case 'in': 
-        //             return this[validation.name](value, validation.options);
-        //     }
-        // } 
         return this[validation](value);
     }
 
     isValidValidation(validation) {
-        // console.log(validation)
-        // if (isObject(validation)) { // check if the validation is an object
-        //     return messages[validation.name];
-        // }
         return messages.hasOwnProperty(validation);
     }
 }

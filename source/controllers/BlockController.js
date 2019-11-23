@@ -1,9 +1,9 @@
 const { unprefixedAddress } = require('../../utils/functions');
-const { removeDuplicateSender, varifyAndGenerateBalances } = require('../../utils/transactionFunctions');
+const { removeDuplicateSender } = require('../../utils/transactionFunctions');
 const Validator = require('../../utils/Validator');
 const blockchain = require('../models/Blockchain');
 const Block = require('../models/Block');
-const BigNumber = require('bignumber.js');
+const Address = require('../models/Address');
 
 
 class BlockController {
@@ -44,8 +44,9 @@ class BlockController {
         });
 
         if (newBlock.blockHash === blockHash && (newBlock.index === blockchain.getLastBlock().index + 1)) {
-            const transactions = varifyAndGenerateBalances(newBlock, blockchain);
+            const transactions = Address.varifyGetAndGenerateBalances(newBlock);
             blockchain.addBlock({ ...newBlock, transactions });
+            blockchain.filterTransfersPendingTransactions(transactions);
             return res.status(200).json({
                 message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
             });
@@ -54,10 +55,16 @@ class BlockController {
         return res.status(404).json({message: 'Block not found or Block already mined.'});
     }
 
-    static getBlocks({ res }) {
+    static getBlocks(req, res) {
+        let blocks;
+        if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
+            blocks = blockchain.chain.slice(-3);
+        } else {
+            blocks = blockchain.chain;
+        }
         return res
             .status(200)
-            .json(blockchain.chain);
+            .json(blocks);
     }
 
     static getBlockByIndex(req, response) {
@@ -67,6 +74,15 @@ class BlockController {
                 .json({ message: 'Block not found' });
         }
         return response.json(blockchain.chain[req.params.index]);
+    }
+
+    static getBlockByHash(req, res) {
+        const block = blockchain.chain.find(block => block.blockHash === req.params.hash)
+        if (block) {
+            return res.json(block);
+        } else {
+            return res.status(404).json({message: 'Block not found.'});
+        }
     }
 }
 

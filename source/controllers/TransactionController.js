@@ -1,23 +1,32 @@
-const {
-    getBignumberAddressBalances,
-    newSenderPendingBalance,
-    newReceiverPendingBalance,
-} = require('../../utils/BalanceFunctions');
 const { unprefixedAddress } = require('../../utils/functions');
 const { hasFunds, verifySignature } = require('../../utils/transactionFunctions');
-const blockChain = require("../models/Blockchain");
+const blockchain = require("../models/Blockchain");
 const Transaction = require("../models/Transaction");
 const Bignumber = require('bignumber.js');
 const Validator = require('../../utils/Validator');
+const Address = require('../models/Address');
 
 
 class TransactionController {
     static getPendingTransactions({ res }) {
-        return res.status(200).json(blockChain.pendingTransactions);
+        return res.status(200).json(blockchain.pendingTransactions);
     }
 
-    static getConfirmedTransactions({ res }) {
-        return res.status(200).json(blockChain.getConfirmedTransactions());
+    static getConfirmedTransactions(req, res ) {
+        let transactions;
+        if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
+            transactions = blockchain.getConfirmedTransactions().slice(-3);
+        } else {
+            transactions = blockchain.getConfirmedTransactions();
+        }
+        return res.status(200).json(transactions);
+    }
+
+    static getAllTransactions({res}) {
+        const transactions = blockchain.getConfirmedTransactions().concat(blockchain.pendingTransactions)
+            .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated));
+
+        return res.json(transactions)
     }
 
     static getTransactionByHash({ params: { hash } }, response) {
@@ -32,7 +41,7 @@ class TransactionController {
                 .json(validation.getErrors());
         }
 
-        const transaction = blockChain.getTransactionByHash(hash);
+        const transaction = blockchain.getTransactionByHash(hash);
         if (transaction) return response.status(200).json(transaction);
 
         return response.status(404).json({ message: "Transaction not found" });
@@ -100,17 +109,17 @@ class TransactionController {
                 .status(400)
                 .json(validator.getErrors());
         }
-
-        const senderAddressBalances = getBignumberAddressBalances(blockChain.getAddressData(from));
+        
+        const senderAddress = Address.find(from);
         const totalAmount = Bignumber(value).plus(fee);
-        if (!hasFunds(senderAddressBalances, totalAmount)) {
-            return response
-                .status(400)
-                .json({
-                    message: "Balance is not enough to generate transaction."
-                });
-        }
-
+        // if (!senderAddress.hasFunds(totalAmount)) {
+        //     return response
+        //         .status(400)
+        //         .json({
+        //             message: "Balance is not enough to generate transaction."
+        //         });
+        // }
+        
         const newTransaction = new Transaction({
             from,
             to,
@@ -118,33 +127,37 @@ class TransactionController {
             fee,
             senderPubKey,
             data,
-            senderSignature: senderSignature,
+            senderSignature,
             dateCreated,
         }).getData();
-
-        if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
-            return response
-                .status(400)
-                .json({
-                    message: "Trasaction signature verification invalid."
-                });
+        
+        if (blockchain.getTransactionByHash(newTransaction.transactionDataHash)) {
+            return response.status(409).send({
+                message: 'Transaction already exists.',
+            });
         }
+        // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
+        //     return response
+        //         .status(400)
+        //         .json({
+        //             message: "Trasaction signature verification invalid."
+        //         });
+        // }
+
+        // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
+        //     return response
+        //         .status(400)
+        //         .json({
+        //             message: "Trasaction signature verification invalid."
+        //         });
+        // }
 
         // add new pending transaction
-        blockChain.addPendingTransaction(newTransaction);
+        blockchain.addPendingTransaction(newTransaction);
         // new from pending balance
-        blockChain.setAddressData(from, {
-            ...blockChain.getAddressData(from),
-            pendingBalance: newSenderPendingBalance(senderAddressBalances, totalAmount),
-        });
+        senderAddress.pendingToSend(totalAmount);
         // new to pending balance
-        const receiverAddressBalances = getBignumberAddressBalances(blockChain.getAddressData(to));
-        blockChain.setAddressData(to, {
-            ...blockChain.getAddressData(to),
-            safeBalance: receiverAddressBalances.safeBalance.toString(),
-            confirmedBalance: receiverAddressBalances.confirmedBalance.toString(),
-            pendingBalance: newReceiverPendingBalance(receiverAddressBalances, value),
-        });
+        Address.find(to).pendingToReceive(value);
         return response.json(newTransaction);
     }
 }

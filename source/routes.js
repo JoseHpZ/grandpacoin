@@ -17,6 +17,7 @@ module.exports = (router) => {
     router.get('/transactions/confirmed', TransactionController.getConfirmedTransactions);
     router.get('/transaction/:hash', TransactionController.getTransactionByHash);
     router.post('/transactions/send', TransactionController.sendTransaction);
+    router.get('/transactions', TransactionController.getAllTransactions);
     // balances
     router.get('/balances', BalanceController.getAddressesBalances);
     router.get('/address/:address/transactions', BalanceController.listTransactionForAddress);
@@ -26,6 +27,7 @@ module.exports = (router) => {
     router.post('/mining/submit-mined-block', BlockController.getSubmittedBlock);
     router.get('/blocks', BlockController.getBlocks);
     router.get('/blocks/:index', BlockController.getBlockByIndex);
+    router.get('/block/:hash', BlockController.getBlockByHash);
     // Peers routes
     router.get('/peers', PeersController.getConnectedPeers);
     router.post('/peers/connect', PeersController.connectPeer);
