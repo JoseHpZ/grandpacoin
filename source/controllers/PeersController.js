@@ -1,17 +1,13 @@
-const { getNodeOwnIp } = require("../../utils/functions");
-const blockchain = require("../models/Blockchain");
-const Request = require("../../utils/Request");
-const Url = require("url");
+const Peer = require("../models/Peer");
 const Validator = require('../../utils/Validator');
 const ClientSocket = require('../Sockets/ClientSocket');
 
 
 class PeersController {
-    static getConnectedPeers(request, response) {
-        const { peers } = blockchain;
+    static async getConnectedPeers(request, response) {
         return response
             .status(200)
-            .json(peers);
+            .json(Peer.peers);
     }
 
     static async connectPeer(request, response) {
@@ -24,12 +20,12 @@ class PeersController {
             },
             {
                 customValidations: [{
-                    validation: () => peerUrl !== `${request.protocol}://${request.get('host')}:${process.env.PORT}`,
-                    message: 'Invalid peer url to connect.',
+                    validation: () => !Peer.getPeerByUrl(peerUrl),
+                    message: 'Peer connection already exists.',
                 }],
+                name: 'peerUrl'
             }
         ]);
-
         if (validator.validate().hasError()) {
             return response
                 .status(400)
@@ -40,12 +36,11 @@ class PeersController {
             await new ClientSocket(peerUrl).connect();
             return response.send({ message: `Connected to peer: ${peerUrl}` });
         } catch (err) {
-            console.log(err)
             return response.status(err.status).json({ message: err.message });
         }
     }
 
-    static notifyNewBlock(request, response) {
+    static async notifyNewBlock(request, response) {
         const { blocksCount, cumulativeDifficulty, nodeUrl } = request.body;
         return response
             .status(200)

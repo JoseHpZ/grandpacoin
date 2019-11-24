@@ -45,7 +45,7 @@ function isValidUrl(url) {
     return false;
 }
 
-function withColor(text = '', color = 'green') {
+function withColor(text = '', color = 'cyan') {
     const newColor = () => {
         switch (color) {
             case 'yellow':

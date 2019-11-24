@@ -6,7 +6,7 @@ global.coins = {
     son: 1000,
     grandson: 1
 };
-global.mininumTransactionFee = 10;
+global.minimumTransactionFee = 10;
 global.blockReward = 5000000;
 global.coinNames = {
     grandpa: 'grandpa',

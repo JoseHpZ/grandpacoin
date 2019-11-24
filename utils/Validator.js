@@ -89,7 +89,7 @@ class Validator extends ValidatorRules {
                 
                 const passValidation = this.check(validation, inputData.value);
                 
-                if (passValidation) {
+                if (passValidation || this.haveNullableOptions(inputData)) {
                     this.validInputs[inputData.name] = inputData.value;
                     return;
                 }
@@ -153,6 +153,10 @@ class Validator extends ValidatorRules {
 
     isValidValidation(validation) {
         return messages.hasOwnProperty(validation);
+    }
+
+    haveNullableOptions(inputData) {
+        return (inputData.value === undefined || inputData.value === null) && inputData.validations.includes('nullable');
     }
 }
 

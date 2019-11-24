@@ -9,7 +9,6 @@ const Transaction = require('./Transaction');
 class Blockchain {
     constructor() {
         this.nodeId = generateNodeId();
-        this.peers = {};
         this.initBlockchain();
     }
 
@@ -17,6 +16,7 @@ class Blockchain {
         this.chain = [];
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
+        this.cumulativeDifficult = '0';
         this.addresses = {};
         this.addressesIds = [];
         this.blockNumber = 0;
@@ -34,15 +34,6 @@ class Blockchain {
             }
         }
         return transaction;
-    }
-
-    getcumulativeDifficult() {
-        return this.chain.reduce((cumulativeDifficulty, block) => {
-            return new BigNumber(16)
-                .exponentiatedBy(block.difficulty)
-                .plus(cumulativeDifficulty)
-                .toString()
-        }, "0");
     }
 
     addBlock(newBlock) {
@@ -63,7 +54,7 @@ class Blockchain {
 
     addPendingTransaction(newTransaction) {
         this.pendingTransactions.push(newTransaction);
-        this.orderPendingTransaction();
+        this.orderPendingTransactions();
     }
 
     adjustDifficulty(newBlockUnixTime, lastBlockUnixTime) {
@@ -84,7 +75,7 @@ class Blockchain {
         return this.chain[this.chain.length - 1];
     }
 
-    orderPendingTransaction() {
+    orderPendingTransactions() {
         this.pendingTransactions.sort(function (transactionA, transactionB) {
             if (BigNumber(transactionA.fee).isGreaterThan(transactionB.fee) || BigNumber(transactionA.value).isGreaterThan(transactionB.value)) {
                 return -1;
@@ -130,28 +121,25 @@ class Blockchain {
         return {
             about: global.appName,
             nodeId: this.nodeId,
-            peers: this.peers,
+            // peers: this.peers,
             chainId: this.chain[0].blockHash,
             currentDifficult: this.currentDifficulty,
             blocksCount: this.chain.length,
-            cumulativeDifficulty: this.getcumulativeDifficult(),
-            confirmedTransactions: this.getConfirmedTransactions().length,
-            pendingTransactions: this.pendingTransactions.length,
+            cumulativeDifficulty: this.cumulativeDifficult,
         }
     }
 
     needSyncronization(cumulativeDifficult) {
-        BigNumber(cumulativeDifficult).isGreaterThan(this.getcumulativeDifficult())
+        return BigNumber(cumulativeDifficult).isGreaterThan(this.cumulativeDifficult)
     }
 
-    addPeer(peerInfo) {
-        this.peers[peerInfo.nodeId] = {
-            ...peerInfo,
-        }
-    }
-
-    removePeer(nodeId) {
-        delete this.peers[nodeId];
+    calculateCumulativeDifficult() {
+        this.cumulativeDifficult = this.chain.reduce((cumulativeDifficulty, block) => {
+            return new BigNumber(16)
+                .exponentiatedBy(block.difficulty)
+                .plus(cumulativeDifficulty)
+                .toString()
+        }, "0");
     }
 }
 

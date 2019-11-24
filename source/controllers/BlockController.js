@@ -7,7 +7,7 @@ const Address = require('../models/Address');
 
 
 class BlockController {
-    static getMiningJob({ params: { minerAddress }}, res) {
+    static async getMiningJob({ params: { minerAddress }}, res) {
         const validator = new Validator([{
             validations: ['isValidAddress'],
             name: 'minerAddress',
@@ -29,7 +29,7 @@ class BlockController {
         return res.status(200).json(miningJob);
     }
 
-    static getSubmittedBlock({ body }, res) {
+    static async getSubmittedBlock({ body }, res) {
         const { blockHash, blockDataHash, ...blockHeader } = body;
         if (blockHash.length !== 64 || blockDataHash.length !== 64)
             return res.status(400).json({message: 'Invalid data.'});
@@ -46,6 +46,7 @@ class BlockController {
         if (newBlock.blockHash === blockHash && (newBlock.index === blockchain.getLastBlock().index + 1)) {
             const transactions = Address.varifyGetAndGenerateBalances(newBlock);
             blockchain.addBlock({ ...newBlock, transactions });
+            blockchain.calculateCumulativeDifficult();
             blockchain.filterTransfersPendingTransactions(transactions);
             return res.status(200).json({
                 message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
@@ -55,7 +56,7 @@ class BlockController {
         return res.status(404).json({message: 'Block not found or Block already mined.'});
     }
 
-    static getBlocks(req, res) {
+    static async getBlocks(req, res) {
         let blocks;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
             blocks = blockchain.chain.slice(-3);
@@ -67,7 +68,7 @@ class BlockController {
             .json(blocks);
     }
 
-    static getBlockByIndex(req, response) {
+    static async getBlockByIndex(req, response) {
         if (!req.params.index || !blockchain.chain[req.params.index]) {
             return response
                 .status(404)
@@ -76,7 +77,7 @@ class BlockController {
         return response.json(blockchain.chain[req.params.index]);
     }
 
-    static getBlockByHash(req, res) {
+    static async getBlockByHash(req, res) {
         const block = blockchain.chain.find(block => block.blockHash === req.params.hash)
         if (block) {
             return res.json(block);

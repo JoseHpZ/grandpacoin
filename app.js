@@ -8,6 +8,8 @@ const { checkPort } = require('./source/Sockets/socketsFunctions');
 const { withColor } = require('./utils/functions');
 // socket server
 const ServerSocket = require('./source/Sockets/ServerSocket');
+const server = require('http').Server(app)
+
 
 console.clear()
 console.log('----------------------------------------------')
@@ -15,7 +17,7 @@ global.PORT = 5555;
 function initializeApp() {
     checkPort(global.PORT)
         .then(() => {
-            app.listen(global.PORT, () => {
+            server.listen(global.PORT, () => {
                 console.log(withColor('App listening on port: ') + global.PORT);
             });
             app.on('error', (err) => {
@@ -25,10 +27,11 @@ function initializeApp() {
             app.use(express.json());
             app.use(express.urlencoded({ extended: true }));
             app.use(router);
-            new ServerSocket();
+            ServerSocket.create();
             routes(router);
+            
         }).catch(() => {
-            console.log(withColor(`Application PORT ${global.PORT} occupied, try on onother port...`, 'red'))
+            console.log(withColor(`Application PORT ${global.PORT} occupied, try on onother port...`, 'yellow'))
             global.PORT += 1;
             initializeApp();
         })
