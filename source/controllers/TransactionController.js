@@ -49,6 +49,7 @@ class TransactionController {
     }
 
     static sendTransaction({ body }, response) {
+        body = typeof body === 'string' ? JSON.parse(body) : body;
         const {
             value,
             fee,

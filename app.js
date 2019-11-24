@@ -10,6 +10,7 @@ const { withColor } = require('./utils/functions');
 const ServerSocket = require('./source/Sockets/ServerSocket');
 const server = require('http').Server(app)
 
+app.use(setCorsHeadersMiddleware);
 
 console.clear()
 console.log('----------------------------------------------')
