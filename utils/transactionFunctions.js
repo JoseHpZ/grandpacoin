@@ -43,9 +43,8 @@ function getTransactionsFee(transactions) {
  */
 function removeTransactionWithoutFunds(pendingTransactions, addresses) {
     return pendingTransactions.filter(transaction => 
-        getBignumberAddressBalances(
-            addresses[transaction.from]
-        ).confirmedBalance.isGreaterThanOrEqualTo(transaction.fee)
+        BigNumber(addresses[transaction.from].confirmedBalance)
+            .isGreaterThanOrEqualTo(transaction.fee)
     )
 }
 

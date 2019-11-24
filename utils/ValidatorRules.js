@@ -4,7 +4,7 @@ const isObject = function (a) {
 
 class ValidatorRules {
     required(value) {
-        if (!value) {
+        if (value === undefined || value === null) {
             return false;
         }
         if (typeof value === 'string' && value.trim() === '') {
@@ -91,6 +91,13 @@ class ValidatorRules {
         }
 
         return !isNaN(Date.parse(value));
+    }
+
+    boolean(value) {
+        if (typeof value === 'boolean') {
+            return true;
+        }
+        return false;
     }
 }
 

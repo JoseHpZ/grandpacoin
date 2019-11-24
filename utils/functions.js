@@ -1,7 +1,5 @@
 const crypto = require('crypto');
 const uuidv4 = require('uuid/v4');
-const ip = require('ip');
-const BigNumber = require('bignumber.js');
 
 function generateNodeId() {
     return crypto
@@ -47,16 +45,21 @@ function isValidUrl(url) {
     return false;
 }
 
-function getNodeOwnIp() {
-    const port = process.env.PORT || 5555;
-    const host = ip.address();
-    return {
-        peerUrl: `http://${host}:${port}`,
-        host,
-        port
-    };
+function withColor(text = '', color = 'cyan') {
+    const newColor = () => {
+        switch (color) {
+            case 'yellow':
+                return '\x1b[33m';
+            case 'cyan':
+                return '\x1b[36m';
+            case 'red':
+                return '\x1b[31m';
+            default:
+            return '\x1b[32m';
+        }
+    }
+    return newColor() + text + ' ' + '\x1b[0m';
 }
-
 
 module.exports = {
     generateNodeId,
@@ -64,7 +67,7 @@ module.exports = {
     isValidPubKey,
     isValidSignature,
     isValidTransactionHash,
-    getNodeOwnIp,
     isValidUrl,
     unprefixedAddress,
+    withColor,
 }

@@ -30,24 +30,9 @@ class Address {
     }
 
     pendingToSend(totalAmount) {
-        // if (blockchain.pendingTransactions.find((transaction) => transaction.from === this.address)) {
-        // }
-        if (!this.pendingBalance.isZero()) {
-            this.pendingBalance = this.pendingBalance.minus(totalAmount);
-            if (this.pendingBalance.isNegative())
-                this.pendingBalance = this.confirmedBalance.minus(this.pendingBalance);
-            // blockchain.pendingTransactions.forEach(transaction => {
-            //     if (transaction.from === this.address) {
-            //         this.pendingBalance = this.pendingBalance.minus(BigNumber(transaction.from).plus(transaction.fee))
-            //     }
-            //     if (transaction.to === this.address) {
-            //         this.pendingBalance
-            //     }
-            // })
-        } else {
-            this.pendingBalance = this.confirmedBalance.minus(totalAmount)
-        }
-        
+        this.pendingBalance = this.pendingBalance.isZero()
+            ? BigNumber(this.confirmedBalance).minus(totalAmount)
+            : BigNumber(this.pendingBalance).minus(totalAmount);
         this.updateChain();
     }
 
@@ -131,7 +116,6 @@ class Address {
             this.safeBalance = this.confirmedBalance;
         else
             this.safeBalance = newSafe;
-        console.log(this.safeBalance)
         this.updateChain();
     }
 
@@ -155,22 +139,20 @@ class Address {
 
     static calculateBlockchainBalances() {
         blockchain.addresses = {};
+        blockchain.chain.forEach(block => {
+            block.transactions.forEach((transaction) => {
+                Address.generateTransactionBalances(transaction);
+                if (blockchain.chain.length - transaction.minedInBlockIndex > 5)
+                    Address.find(transaction.to).alterSafeBalance(transaction.value);
+            });
+        })
         blockchain.pendingTransactions.forEach(transaction => {
+            // new to pending balance
+            Address.find(transaction.to).pendingToReceive(transaction.value);
             // new from pending balance
             Address.find(transaction.from).pendingToSend(
                 BigNumber(transaction.value).plus(transaction.fee) // total amount
             );
-            // new to pending balance
-            Address.find(transaction.to).pendingToReceive(transaction.value);
-        })
-        console.clear()
-        blockchain.chain.forEach(block => {
-            block.transactions.forEach((transaction) => {
-                Address.generateTransactionBalances(transaction);
-                if (blockchain.chain.length - transaction.minedInBlockIndex > 5) {
-                    Address.find(transaction.to).alterSafeBalance(transaction.value);
-                }
-            });
         })
     }
 
@@ -211,8 +193,8 @@ class Address {
     }
 
     static checkSafeBalances(blockIndex) {
-        console.clear()
-        console.log('******************************************')
+        // console.clear()
+        // console.log('******************************************')
         blockchain.chain[blockIndex - 6].transactions.forEach((transaction) => {
              Address.find(transaction.to).alterSafeBalance(transaction.value);
         });

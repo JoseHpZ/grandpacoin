@@ -7,32 +7,20 @@ const { unprefixedAddress } = require('../../utils/functions');
 
 
 class BlockchainController {
-    static resetChain({ res }) {
+    static async resetChain({ res }) {
         blockchain.initBlockchain();
         return res
             .status(200)
             .json({ message: 'The chain was reset to its genesis block.' });
     }
 
-    static getInfo(req, res) {
-        return res.json({
-            about: global.appName,
-            nodeId: blockchain.nodeId,
-            peers: blockchain.peers,
-            chainId: blockchain.chain[0].blockHash,
-            nodeUrl: req.protocol + '://' + req.get('host'),
-            currentDifficult: blockchain.currentDifficulty,
-            blocksCount: blockchain.chain.length,
-            cumulativeDifficulty: blockchain.getcumulativeDifficult(),
-            confirmedTransactions: blockchain.getConfirmedTransactions().length,
-            pendingTransactions: blockchain.pendingTransactions.length,
-        });
+    static async getInfo(req, res) {
+        return res.json(blockchain.getInfo());
     }
 
-    static getDebug(req, res) {
-        // Address.calculateBlockchainBalances();
+    static async getDebug(req, res) {
         return res.json({
-            addresses: blockchain.addresses,
+            addresses: Address.getAddressesBalances(),
             chain: blockchain.chain,
             selfUrl: req.protocol + '://' + req.get('host'),
             nodeId: blockchain.nodeId,
@@ -41,13 +29,13 @@ class BlockchainController {
             transactions: blockchain.getConfirmedTransactions(),
             currentDifficult: blockchain.currentDifficulty,
             blocksCount: blockchain.chain.length,
-            cumulativeDifficulty: blockchain.getcumulativeDifficult(),
+            cumulativeDifficulty: blockchain.cumulativeDifficult,
             pendingTransactions: blockchain.pendingTransactions.length,
             pendingTransactions: blockchain.pendingTransactions,
         });
     }
 
-    static debugMining({ params: { minerAddress, difficulty } }, res) {
+    static async debugMining({ params: { minerAddress, difficulty } }, res) {
         const validator = new Validator([
             {
                 validations: [
@@ -82,16 +70,14 @@ class BlockchainController {
             ...blockHeader
         });
 
-        if (newBlock.blockHash === blockHash) {
-            if (newBlock.index === blockchain.getLastBlock().index + 1) {
-                const transactions = Address.varifyGetAndGenerateBalances(newBlock);
-                blockchain.addBlock({ ...newBlock, transactions });
-                blockchain.filterTransfersPendingTransactions(transactions);
-                return res.status(200).json({
-                    message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
-                });
-            }
-            return res.status(404).json('Block not found or Block already mined.');
+        if (newBlock.blockHash === blockHash && newBlock.index === blockchain.getLastBlock().index + 1) {
+            const transactions = Address.varifyGetAndGenerateBalances(newBlock);
+            blockchain.addBlock({ ...newBlock, transactions });
+            blockchain.calculateCumulativeDifficult();
+            blockchain.filterTransfersPendingTransactions(transactions);
+            return res.status(200).json({
+                message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
+            });
         }
 
         return res.status(404).json({ message: 'Block not found or Block already mined.' });

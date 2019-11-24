@@ -3,6 +3,8 @@ const Transaction = require('./Transaction');
 const { clearSingleTransactionData, getTransactionsFee } = require('../../utils/transactionFunctions');
 const BigNumber = require('bignumber.js');
 const GranpaCoin = require('../models/GrandpaCoin');
+const Validator = require('../../utils/Validator');
+
 
 class Block extends GranpaCoin {
     static getBlockHash(blockObject) {
@@ -69,6 +71,62 @@ class Block extends GranpaCoin {
             nonce,
             blockHash: Block.getBlockHash({blockDataHash, dateCreated, nonce})
         });
+    }
+    static validDataHash({ index, transactions, difficulty, prevBlockHash, minedBy, blockDataHash }) {
+        return blockDataHash === Block.getBlockHash({
+            index, transactions, difficulty, prevBlockHash, minedBy
+        });
+    }
+
+    static validProof({ difficulty, blockHash }) {
+        return '0'.repeat(difficulty) === blockHash.slice(0, difficulty);
+    }
+
+    static validBlockHash({ blockDataHash, dateCreated, nonce, blockHash }) {
+        return  blockHash === Block.getBlockHash({blockDataHash, dateCreated, nonce});
+    }
+
+    static isValid(block) {
+        const validator = new Validator([
+            {
+                validations: ['required', 'integer'],
+                names: ['index', 'difficulty', 'nonce'],
+                values: {
+                    index: block.index,
+                    difficulty: block.difficulty,
+                    nonce: block.nonce
+                },
+            },
+            {
+                validations: ['required', 'array'],
+                value: block.transactions,
+                name: 'transactions',
+            },
+            {
+                validations: ['required', 'string'],
+                names: ['minedBy', 'blockDataHash', 'blockHash'],
+                values: {
+                    minedBy: block.minedBy,
+                    blockDataHash: block.blockDataHash,
+                    blockHash: block.blockHash
+                },
+            },
+            {
+                validations: ['required', 'date'],
+                value: block.dateCreated,
+                name: 'dateCreated',
+            },
+            {
+                customValidations: [
+                    { validation: Block.validProof, message: 'invalid proof.' },
+                    { validation: Block.validDataHash, message: 'invalid data hash.' },
+                    { validation: Block.validBlockHash, message: 'Invalid block hash.' },
+                ],
+                value: block,
+                name: 'block',
+            },
+        ]);
+        return validator.validate().hasError();
     }
     constructor({index, transactions, difficulty, prevBlockHash, minedBy, nonce, dateCreated, blockDataHash, blockHash}) {
         super();

@@ -12,4 +12,5 @@ module.exports = {
     isValidAddress: 'The @input must be a valid address.',
     isValidUrl: 'The @input is not valid',
     date: 'The @input must be a valid date.',
+    boolean: 'The @input must be a valid boolean.',
 };
