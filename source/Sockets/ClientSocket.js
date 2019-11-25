@@ -113,9 +113,9 @@ class ClientSocket {
                 status: 404,
             });
         } else {
-            console.log(withColor('\nUknow error.', 'yellow'))
+            console.log(withColor('\nUnknown error.', 'yellow'))
             reject({
-                message: 'Uknow error, please try again.',
+                message: 'Unknown error, please try again.',
                 status: 500,
             });
         }

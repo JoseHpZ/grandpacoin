@@ -87,7 +87,7 @@ class PeersController {
             })
         } catch (error) {
             return response.status(500).json({
-                message: 'Uknow error. please try again.',
+                message: 'Unknown error. please try again.',
             })
         }
     }
@@ -95,7 +95,7 @@ class PeersController {
     static async deletePeer(req, res) {
         if (!Peer.existsPeer(nodeUrl)) {
             response.status(404).json({
-                message: 'You don\'t are syncronized with peer ' + nodeUrl, 
+                message: 'You are not syncronized with the peer:  ' + nodeUrl, 
             })
         }
 

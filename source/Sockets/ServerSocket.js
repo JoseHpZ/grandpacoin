@@ -1,5 +1,5 @@
 const io = require('socket.io')();
-const { checkPort } = require('./socketsFunctions');
+const { checkPort, getIPAddress } = require('./socketsFunctions');
 const blockchain = require('../models/Blockchain')
 const { existsPeer, getPeer } = require('../models/Peer');
 const { withColor } = require('../../utils/functions');
@@ -18,7 +18,7 @@ class ServerSocket {
         return new Promise((resolve, reject) => {
             require('dns').lookup(require('os').hostname(), function (err, address, fam) {
                 if (!err) {
-                    resolve(`http://${address}:${port}`);
+                    resolve(`http://${getIPAddress()}:${port}`);
                 } else {
                     reject(err);
                 }
