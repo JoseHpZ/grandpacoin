@@ -162,12 +162,14 @@ class Address {
             Address.checkSafeBalances(block.index);
         }
         block.transactions.forEach((transaction) => {
-            transactions.push({
-                ...transaction,
-                minedInBlockIndex: block.index,
-                transferSuccessful: Address.generateTransactionBalances(transaction),
-            });
+            const transferSuccessful = Address.generateTransactionBalances(transaction);
+            transactions.push({ ...transaction });
+            if (transaction.minedInBlockIndex === undefined || transaction.minedInBlockIndex === null) {
+                transactions.minedInBlockIndex = block.index;
+                transactions.transferSuccessful = transferSuccessful;
+            }
         });
+        blockchain.filterTransfersPendingTransactions(transactions);
         return transactions;
     }
 

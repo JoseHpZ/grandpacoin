@@ -4,6 +4,7 @@ const Validator = require('../../utils/Validator');
 const blockchain = require('../models/Blockchain');
 const Block = require('../models/Block');
 const Address = require('../models/Address');
+const eventEmmiter = require('../Sockets/eventEmmiter');
 
 
 class BlockController {
@@ -47,7 +48,7 @@ class BlockController {
             const transactions = Address.varifyGetAndGenerateBalances(newBlock);
             blockchain.addBlock({ ...newBlock, transactions });
             blockchain.calculateCumulativeDifficult();
-            blockchain.filterTransfersPendingTransactions(transactions);
+            eventEmmiter.emit('new_block', newBlock); // emit event to Server Socket
             return res.status(200).json({
                 message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
             });

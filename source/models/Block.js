@@ -18,10 +18,10 @@ class Block extends GranpaCoin {
             transactions: [transactions],
             difficulty: 0,
             prevBlockHash: '0',
-            minedBy: '00000000000000000000000000000000',
+            minedBy: '0000000000000000000000000000000000000000',
             nonce: 0,
             dateCreated: global.originDate,
-            minerAddress: '00000000000000000000000000000000'
+            minerAddress: '0000000000000000000000000000000000000000'
         });
     }
     static getCandidateBlock({index, prevBlockHash, difficulty, transactions: pendingTransactions, minedBy}) {
@@ -55,7 +55,7 @@ class Block extends GranpaCoin {
     static getBlockObject({index, transactions, difficulty, prevBlockHash, minedBy, nonce, dateCreated}) {
         const blockDataHash = Block.getBlockHash({
             index,
-            transactions,
+            transactions: Transaction.hashFields(transactions),
             difficulty,
             prevBlockHash,
             minedBy
@@ -72,9 +72,14 @@ class Block extends GranpaCoin {
             blockHash: Block.getBlockHash({blockDataHash, dateCreated, nonce})
         });
     }
+
     static validDataHash({ index, transactions, difficulty, prevBlockHash, minedBy, blockDataHash }) {
         return blockDataHash === Block.getBlockHash({
-            index, transactions, difficulty, prevBlockHash, minedBy
+            index,
+            transactions: Transaction.hashFields(transactions),
+            difficulty,
+            prevBlockHash,
+            minedBy
         });
     }
 
@@ -87,9 +92,16 @@ class Block extends GranpaCoin {
     }
 
     static isValid(block) {
+        if (!block.transactions)
+            return false;
+        for (let transaction of block.transactions) {
+            if (!Transaction.isValid(transaction)) {
+                return false;
+            }
+        }
         const validator = new Validator([
             {
-                validations: ['required', 'integer'],
+                validations: ['integer'],
                 names: ['index', 'difficulty', 'nonce'],
                 values: {
                     index: block.index,
@@ -98,12 +110,12 @@ class Block extends GranpaCoin {
                 },
             },
             {
-                validations: ['required', 'array'],
+                validations: ['array'],
                 value: block.transactions,
                 name: 'transactions',
             },
             {
-                validations: ['required', 'string'],
+                validations: ['string'],
                 names: ['minedBy', 'blockDataHash', 'blockHash'],
                 values: {
                     minedBy: block.minedBy,
@@ -112,7 +124,7 @@ class Block extends GranpaCoin {
                 },
             },
             {
-                validations: ['required', 'date'],
+                validations: ['date'],
                 value: block.dateCreated,
                 name: 'dateCreated',
             },
@@ -126,7 +138,7 @@ class Block extends GranpaCoin {
                 name: 'block',
             },
         ]);
-        return validator.validate().hasError();
+        return validator.validate().pass();
     }
     constructor({index, transactions, difficulty, prevBlockHash, minedBy, nonce, dateCreated, blockDataHash, blockHash}) {
         super();
