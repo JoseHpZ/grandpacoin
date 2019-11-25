@@ -1,8 +1,7 @@
 const io = require('socket.io')();
 const { checkPort } = require('./socketsFunctions');
 const blockchain = require('../models/Blockchain')
-const Peer = require('../models/Peer');
-const { CHANNELS, CHANNELS_ACTIONS ,singleSocketActionsHandler } = require('../Sockets/socketsFunctions');
+const { existsPeer, getPeer } = require('../models/Peer');
 const { withColor } = require('../../utils/functions');
 const ClientSocket = require('./ClientSocket');
 const eventEmmiter = require('./eventEmmiter');
@@ -10,23 +9,9 @@ const eventEmmiter = require('./eventEmmiter');
 
 class ServerSocket {
     static port = 6000;
-    static hosts = {};
 
-    static get port() {
-        return this.port;
-    }
-
-    static set port(value) {
-        this.port = value;
-    }
-    
     static create() {
         ServerSocket.findPort();
-    }
-
-    static emit(channel, data) {
-        if (io.clients.length > 0)
-            io.emit(channel, data);
     }
 
     static getServerSocketUrl(port) {
@@ -61,49 +46,85 @@ class ServerSocket {
         io.listen(ServerSocket.port);
         io.on('connect', (socket) => {
             console.log(withColor('\n----> new peer request <----'))
-            socket.emit(CHANNELS.NEW_CONNECTION, {
+            socket.emit(global.CHANNELS.NEW_CONNECTION, {
                 ...blockchain.getInfo(),
                 nodeUrl: global.serverSocketUrl,
             });
-            socket.on(CHANNELS.NEW_CONNECTION, (peerInfo) => {
+            socket.on(global.CHANNELS.NEW_CONNECTION, (peerInfo) => {
                 // make a new client of this server to the new peer
-                if (!Peer.existsPeer(peerInfo.nodeUrl)) {
+                if (!existsPeer(peerInfo.nodeUrl)) {
                     console.log(withColor('\ntrying connect with peer: ') + peerInfo.nodeUrl)
                     ServerSocket.createNewClientSocket(peerInfo.nodeUrl)
-                    ServerSocket.hosts[socket.id] = peerInfo.nodeUrl;
                 }
             });
 
-            socket.on(CHANNELS.SINGLE_SOCKET_CHANNEL, (data) => singleSocketActionsHandler(data, socket));
-            
-            eventEmmiter.on('new_chain', (chain) => {
-                io.emit(CHANNELS.SINGLE_SOCKET_CHANNEL, {
-                    actionType: CHANNELS_ACTIONS.NEW_CHAIN,
-                    chain,
-                })
+            socket.on(global.CHANNELS.CLIENT_CHANNEL, (data) => ServerSocket.actionsHandler(data, socket));
+        })
+        eventEmmiter.on('new_chain', (chain) => {
+            io.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.NEW_CHAIN,
+                chain,
             })
-            eventEmmiter.on('new_transaction', (transaction) => {
-                console.log(withColor('\nemmiting new transaction to peers...'));
-                io.emit(CHANNELS.SINGLE_SOCKET_CHANNEL, {
-                    actionType: CHANNELS_ACTIONS.ADD_NEW_TRANSACTION,
-                    transaction,
-                })
+        })
+        eventEmmiter.on('new_transaction', (transaction) => {
+            console.log(withColor('\nemmiting new transaction to peers...'));
+            io.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.ADD_NEW_TRANSACTION,
+                transaction,
             })
-            // socket.on('disconnect', () => {
-            //     if (!ServerSocket.hosts[socket.id]) return;
-            //     console.log(withColor('\nPeer diconnected, ID:', 'yellow') + `${ServerSocket.hosts[socket.id]}`)
-            //     Peer.removePeer(ServerSocket.hosts[socket.id]);
-            // })
+        })
+        eventEmmiter.on('new_block', (block) => {
+            console.log(withColor('\nemmiting new block to peers...'));
+            io.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.NEW_BLOCK,
+                block,
+            })
+        })
+        eventEmmiter.on('notify_block', (info) => {
+            console.log(withColor('\nEmmiting new block to peer:') +  info.nodeUrl);
+            io.to(getPeer(info.nodeUrl).socketId).emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.NOTIFY_BLOCK,
+                info,
+            })
         })
         console.log(withColor('Server peers socket listening in port:') + this.port);
     }
 
+    static actionsHandler(data, socket) {
+        switch (data.actionType) {
+            case global.CHANNELS_ACTIONS.GET_CHAIN:
+                socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                    actionType: global.CHANNELS_ACTIONS.NEW_CHAIN,
+                    chain: blockchain.chain,
+                })
+                break;
+            case global.CHANNELS_ACTIONS.GET_PENDING_TX:
+                socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                    actionType: global.CHANNELS_ACTIONS.SET_PENDING_TRANSACTIONS,
+                    pendingTransactions: blockchain.pendingTransactions,
+                })
+                console.log('\nSending pending transactions...')
+                break;
+            case global.CHANNELS_ACTIONS.GET_INFO:
+                socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                    actionType: global.CHANNELS_ACTIONS.RECEIVE_INFO,
+                    info: {
+                        ...blockchain.getInfo(),
+                        nodeUrl: global.serverSocketUrl,
+                    },
+                });
+                console.log('\nSending information...')
+                break;
+            default: return;
+        }
+    }
+
     static async createNewClientSocket(peerUrl) {
         try {
-            console.log('sending request')
+            console.log('\nSender request to be peer client...')
             await new ClientSocket(peerUrl).connect();
         } catch (err) {
-            console.log(withColor('Error while connect with peer: ', 'red') + peerUrl + ' Details: ' + err)
+            console.log(withColor('\nError while connect with peer: ', 'red') + peerUrl + ' Details: ', err)
         }
     }
 }

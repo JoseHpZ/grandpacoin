@@ -129,10 +129,6 @@ class Blockchain {
         }
     }
 
-    needSyncronization(cumulativeDifficult) {
-        return BigNumber(cumulativeDifficult).isGreaterThan(this.cumulativeDifficult)
-    }
-
     calculateCumulativeDifficult() {
         this.cumulativeDifficult = this.chain.reduce((cumulativeDifficulty, block) => {
             return new BigNumber(16)

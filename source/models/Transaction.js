@@ -1,7 +1,7 @@
 const { sha256 } = require('../../utils/hashes');
 const BigNumber = require('bignumber.js');
-const { isValidAddress } = require('../../utils/functions');
 const Validator = require('../../utils/Validator');
+
 
 class Transaction {
     constructor({ from, to, value, fee, senderPubKey, data, senderSignature, dateCreated }) {
@@ -108,12 +108,18 @@ class Transaction {
         }
     }
 
-    static isCoinbase({ from, data }) {
-        return from === '0000000000000000000000000000000000000000' && data === 'coinbase tx';
+    static isCoinbase(from) {
+        return from === '0000000000000000000000000000000000000000';
+    }
+
+    static hashFields(transactions) {
+        return transactions.map(tx => {
+            const { minedInBlockIndex, transferSuccessful, ...restFields } = tx; // get only the necesary data for the hash
+            return restFields;
+        });
     }
 
     static isValid(transaction) {
-        console.log(transaction)
         const validator = new Validator(
             Transaction.validationFields(transaction).concat([
                 {
@@ -128,16 +134,19 @@ class Transaction {
                 },
                 {
                     customValidations: [{
-                        validation: () => Transaction.getTransactionDataHash(transaction) === transaction.transactionDataHash
+                        validation: () => Transaction.getTransactionDataHash(transaction) === transaction.transactionDataHash,
+                        message: 'Transaction data hash invalid'
                     }],
                     name: 'transactionDataHash',
                 }
             ]
         ))
         if (validator.validate().hasError()) {
-            console.log(validator.getErrors())
+            if (validator.getErrors().errors.fee && Transaction.isCoinbase(transaction.from)) {
+                return true;
+            }
         }
-        return validator.validate().hasError();
+        return validator.validate().pass();
     }
 
     static validationFields({
@@ -157,17 +166,16 @@ class Transaction {
             },
             {
                 customValidations: [{
-                    validation: () => BigNumber(fee).isGreaterThanOrEqualTo(global.minimumTransactionFee) && !Transaction.isCoinbase({ from, data, }),
+                    validation: () => BigNumber(fee).isGreaterThanOrEqualTo(global.minimumTransactionFee),
                     message: 'The minimun transaction fee is: ' + global.minimumTransactionFee,
                 }],
-                name: 'fee',
-                value: fee,
+                name: 'fee'
             },
             {
                 validations: ['isValidAddress'],
                 customValidations: [{
                     validation: () => from !== to,
-                    message: 'You can\'t sent money to you own account',
+                    message: 'You can\'t sent money to your own account.',
                 }],
                 names: ['from', 'to'],
                 values: { from, to },
