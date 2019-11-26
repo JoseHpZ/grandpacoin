@@ -18,10 +18,10 @@ class Block extends GranpaCoin {
             transactions: [transactions],
             difficulty: 0,
             prevBlockHash: '0',
-            minedBy: '00000000000000000000000000000000',
+            minedBy: '0000000000000000000000000000000000000000',
             nonce: 0,
             dateCreated: global.originDate,
-            minerAddress: '00000000000000000000000000000000'
+            minerAddress: '0000000000000000000000000000000000000000'
         });
     }
     static getCandidateBlock({index, prevBlockHash, difficulty, transactions: pendingTransactions, minedBy}) {

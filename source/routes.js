@@ -20,7 +20,7 @@ module.exports = (router) => {
     router.get('/transactions', TransactionController.getAllTransactions);
     // balances
     router.get('/balances', BalanceController.getAddressesBalances);
-    router.get('/address/:address/transactions', BalanceController.listTransactionForAddress);
+    router.get('/address/:address/transactions', BalanceController.getAddressTransactions);
     router.get('/address/:address/balance', BalanceController.getAllBalancesForAddress);
     // blocks
     router.get('/mining/get-mining-job/:minerAddress', BlockController.getMiningJob);
