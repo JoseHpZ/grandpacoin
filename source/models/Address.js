@@ -116,6 +116,7 @@ class Address {
             this.safeBalance = this.confirmedBalance;
         else
             this.safeBalance = newSafe;
+            
         this.updateChain();
     }
 
@@ -142,8 +143,9 @@ class Address {
         blockchain.chain.forEach(block => {
             block.transactions.forEach((transaction) => {
                 Address.generateTransactionBalances(transaction);
-                if (blockchain.chain.length - transaction.minedInBlockIndex > 5)
+                if (blockchain.chain.length - transaction.minedInBlockIndex > 5) {
                     Address.find(transaction.to).alterSafeBalance(transaction.value);
+                }
             });
         })
         blockchain.pendingTransactions.forEach(transaction => {
@@ -163,11 +165,11 @@ class Address {
         }
         block.transactions.forEach((transaction) => {
             const transferSuccessful = Address.generateTransactionBalances(transaction);
-            transactions.push({ ...transaction });
-            if (transaction.minedInBlockIndex === undefined || transaction.minedInBlockIndex === null) {
-                transactions.minedInBlockIndex = block.index;
-                transactions.transferSuccessful = transferSuccessful;
+            if (!transaction.minedInBlockIndex) {
+                transaction.minedInBlockIndex = block.index;
+                transaction.transferSuccessful = transferSuccessful;
             }
+            transactions.push({ ...transaction });
         });
         blockchain.filterTransfersPendingTransactions(transactions);
         return transactions;

@@ -17,13 +17,13 @@ class ClientSocket {
         return new Promise((resolve, reject) => {
             this.socket.on('connect', () => {
                 this.socket.on(global.CHANNELS.NEW_CONNECTION, (peerInfo) => {
-                    if (Peer.existsPeer(peerInfo.nodeUrl)) {
+                    if (Peer.existsPeer(peerInfo.peerUrl)) {
                         reject({
                             message: 'Connection already exists.',
                             status: 409,
                         });
                         this.socket.disconnect();
-                    } else if (global.serverSocketUrl === peerInfo.nodeUrl) {
+                    } else if (global.serverSocketUrl === peerInfo.peerUrl) {
                         reject({
                             message: 'Invalid peer ID.',
                             status: 409,
@@ -31,7 +31,7 @@ class ClientSocket {
                         this.socket.disconnect();
                     } else {
                         this.initializeListeners(peerInfo);
-                        console.log(withColor('Connect to peer: ') + peerInfo.nodeUrl)
+                        console.log(withColor('Connect to peer: ') + peerInfo.peerUrl)
                         resolve();
                     }
                 });
@@ -48,10 +48,7 @@ class ClientSocket {
          * EMITS
          */
         // send data of this node to server
-        this.socket.emit(global.CHANNELS.NEW_CONNECTION, {
-            ...blockchain.getInfo(),
-            nodeUrl: global.serverSocketUrl, // server socket url is setting when initialize the socket server
-        });
+        this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo());
 
         this.syncronizationDataEmits(peerInfo.cumulativeDifficulty);
         /**
@@ -66,7 +63,6 @@ class ClientSocket {
         // reconnection with the peer if his server are down and comeback before five attemps
         this.socket.on('reconnect', () => {
             this.reconnectionHandler();
-           
         })
         this.socket.on('reconnecting', (attemps) => {
             if (attemps > 5) {
@@ -98,7 +94,7 @@ class ClientSocket {
     reconnectionHandler() {
         this.socket.emit(global.CHANNELS.NEW_CONNECTION, {
             ...blockchain.getInfo(),
-            nodeUrl: global.serverSocketUrl, // server socket url is setting when initialize the socket server
+            peerUrl: global.serverSocketUrl, // server socket url is setting when initialize the socket server
         });
         this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
             actionType: global.CHANNELS_ACTIONS.GET_INFO,
@@ -106,8 +102,7 @@ class ClientSocket {
     }
 
     connectionErrorHandler = (reject) => (err) =>  {
-        console.log(err)
-        if (err.description === 404) {
+        if (err.description === 404 || err.description === 503) {
             console.log(withColor('\nPeer not found.', 'yellow'))
             reject({
                 message: 'Peer url not found.',
