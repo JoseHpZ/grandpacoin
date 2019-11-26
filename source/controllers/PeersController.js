@@ -75,13 +75,13 @@ class PeersController {
         }
 
         process.nextTick(() => {
-            eventEmmiter.emit('notify_block', ({
+            eventEmmiter.emit(global.EVENTS.notify_block, ({
                 blocksCount, cumulativeDifficulty, nodeUrl,
             }))
         });
 
         try {
-            await once(eventEmmiter, 'notify_block');
+            await once(eventEmmiter, global.EVENTS.notify_block);
             return response.status(200).json({
                 message: 'Thank you for the notification.'
             })

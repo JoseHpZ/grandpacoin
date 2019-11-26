@@ -111,7 +111,7 @@ class TransactionController {
         // new to pending balance
         Address.find(to).pendingToReceive(value);
         // send transaction to peers
-        eventEmmiter.emit('new_transaction', newTransaction);
+        eventEmmiter.emit(global.EVENTS.new_transaction, newTransaction);
 
         return response.json(newTransaction);
     }

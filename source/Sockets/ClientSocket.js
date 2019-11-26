@@ -1,5 +1,4 @@
 const io = require('socket.io-client');
-const blockchain = require('../models/Blockchain')
 const Peer = require('../models/Peer');
 const { withColor } = require('../../utils/functions');
 
@@ -84,18 +83,17 @@ class ClientSocket {
                 actionType: global.CHANNELS_ACTIONS.GET_CHAIN
             })
             console.log('\ngetting the new blockchain...')
+        } else {
+            // get pending transactions
+            this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.GET_PENDING_TX
+            });
         }
-        
-        // get pending transactions
-        this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, { actionType: global.CHANNELS_ACTIONS.GET_PENDING_TX });
 
     }
 
     reconnectionHandler() {
-        this.socket.emit(global.CHANNELS.NEW_CONNECTION, {
-            ...blockchain.getInfo(),
-            peerUrl: global.serverSocketUrl, // server socket url is setting when initialize the socket server
-        });
+        this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo());
         this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
             actionType: global.CHANNELS_ACTIONS.GET_INFO,
         })
