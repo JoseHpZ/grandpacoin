@@ -64,7 +64,7 @@ class ServerSocket {
             })
         })
         eventEmmiter.on(global.EVENTS.notify_block, (info) => {
-            console.log(withColor('\nEmmiting new block to peer:') +  info.peerUrl);
+            console.log(withColor('\nEmmiting new block to peer:') + info.nodeUrl);
             io.to(getPeer(info.peerUrl).socketId).emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.NOTIFY_BLOCK,
                 info,

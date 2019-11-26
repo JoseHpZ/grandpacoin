@@ -13,7 +13,7 @@ class TransactionController {
         return res.status(200).json(blockchain.pendingTransactions);
     }
 
-    static getConfirmedTransactions(req, res ) {
+    static getConfirmedTransactions(req, res) {
         let transactions;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
             transactions = blockchain.getConfirmedTransactions().slice(-3);
@@ -23,7 +23,7 @@ class TransactionController {
         return res.status(200).json(transactions);
     }
 
-    static getAllTransactions({res}) {
+    static getAllTransactions({ res }) {
         const transactions = blockchain.getConfirmedTransactions().concat(blockchain.pendingTransactions)
             .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated));
 
@@ -68,7 +68,7 @@ class TransactionController {
 
         from = unprefixedAddress(body.from);
         to = unprefixedAddress(body.to);
-        
+
         const senderAddress = Address.find(from);
         const totalAmount = BigNumber(value).plus(fee);
         if (!senderAddress.hasFunds(totalAmount)) {
@@ -78,7 +78,7 @@ class TransactionController {
                     message: "Balance is not enough to generate transaction."
                 });
         }
-        
+
         const newTransaction = new Transaction({
             from,
             to,
@@ -89,18 +89,18 @@ class TransactionController {
             senderSignature,
             dateCreated,
         }).getData();
-        
+
         if (blockchain.getTransactionByHash(newTransaction.transactionDataHash)) {
             return response.status(409).send({
                 message: 'Transaction already exists.',
             });
         }
-        
+
         if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
             return response
                 .status(400)
                 .json({
-                    message: "Trasaction signature verification invalid."
+                    message: "Trasaction signature verification is invalid."
                 });
         }
 
