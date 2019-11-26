@@ -6,36 +6,45 @@ const Bignumber = require('bignumber.js');
 const eventEmitter = require('../Sockets/eventEmmiter');
 const { withColor } = require('../../utils/functions');
 const BigNumber = require('bignumber.js');
+const { getIPAddress } = require('../Sockets/socketsFunctions');
 
 
 class Peer {
     static peers = {};
 
     static addPeer(peerInfo) {
-        Peer.peers[peerInfo.nodeUrl] = peerInfo;
+        Peer.peers[peerInfo.peerUrl] = peerInfo;
     }
 
-    static removePeer(nodeUrl) {
-        if (Peer.peers[nodeUrl]) {
-            console.log(`\nPeer: ${nodeUrl} removed.`)
-            delete Peer.peers[nodeUrl];
+    static removePeer(peerUrl) {
+        if (Peer.peers[peerUrl]) {
+            console.log(`\nPeer: ${peerUrl} removed.`)
+            delete Peer.peers[peerUrl];
         }
     }
 
-    static getPeer(nodeUrl) {
-        return Peer.peers[nodeUrl];
+    static getPeer(peerUrl) {
+        return Peer.peers[peerUrl];
     }
 
-    static existsPeer(nodeUrl) {
-        return Peer.peers.hasOwnProperty(nodeUrl);
+    static getPeerInfo() {
+        return {
+            about: global.appName,
+            peerUrl: `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`,
+            cumulativeDifficulty: blockchain.cumulativeDifficulty,
+        }
     }
 
-    static getPeerByUrl(nodeUrl) {
-        return Object.values(Peer.peers).find(peer => peer.nodeUrl !== nodeUrl)
+    static existsPeer(peerUrl) {
+        return Peer.peers.hasOwnProperty(peerUrl);
     }
 
-    static needSyncronization(cumulativeDifficult) {
-        return BigNumber(cumulativeDifficult).isGreaterThan(blockchain.cumulativeDifficult)
+    static getPeerByUrl(peerUrl) {
+        return Object.values(Peer.peers).find(peer => peer.peerUrl !== peerUrl)
+    }
+
+    static needSyncronization(cumulativeDifficulty) {
+        return BigNumber(cumulativeDifficulty).isGreaterThan(blockchain.cumulativeDifficulty)
     }
 
     static validateAndSyncronizeChain(chain) {
@@ -75,9 +84,10 @@ class Peer {
             console.log(withColor('Transaction received from peer already exists.', 'yellow'))
             return;
         }
-        if (!Transaction.isValid(transaction))
+        if (!Transaction.isValidPendingTransaction(transaction)) {
+            console.log(withColor('One peer has send an invalid pending transaction.', 'red'));
             return;
-
+        }
         console.log(withColor('\nAdding new transaction...', 'yellow'))
 
         const senderAddress = Address.find(transaction.from);
@@ -101,14 +111,14 @@ class Peer {
             console.log(withColor('A peer sent an invalid block.', 'red'));
             return;
         }
-        let chainIndex = blockchain.chain.length;
-        if (block.index === chainIndex + 1) {
+        let chainLength = blockchain.chain.length;
+        if (block.index === chainLength) {
             const transactions = Address.varifyGetAndGenerateBalances(block);
             blockchain.addBlock({ ...block, transactions });
             blockchain.calculateCumulativeDifficult();
             console.log(withColor('\nReceived new block from a peer.', 'yellow'));
             eventEmitter.emit('new_block', block); // emit event to Server Socket
-        } else if (block.index > chainIndex + 1) {
+        } else if (block.index > chainLength) {
             socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_CHAIN,
             })

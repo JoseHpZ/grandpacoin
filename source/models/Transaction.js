@@ -119,16 +119,47 @@ class Transaction {
         });
     }
 
+    static isValidPendingTransaction(transaction) {
+        const validator = new Validator(
+            Transaction.validationFields(transaction).concat([
+                {
+                    customValidations: [{
+                        validation: () => Transaction.getTransactionDataHash(transaction) === transaction.transactionDataHash,
+                        message: 'Transaction data hash invalid'
+                    }],
+                    name: 'transactionDataHash',
+                },
+            ]
+        ));
+
+        if (!Transaction.isCoinbase(transaction.from)) {
+            validator.addRule({
+                customValidations: [{
+                    validation: () =>  verifySignature(transaction.transactionDataHash, transaction.senderPubKey, transaction.senderSignature),
+                    message: 'Invalid signature',
+                }],
+                name: 'transactionDataHash',
+            });
+        }
+        
+        if (validator.validate().hasError()) {
+            if (validator.getErrors().errors.fee && Transaction.isCoinbase(transaction.from)) {
+                return true;
+            }
+        }
+        return validator.validate().pass();
+    }
+
     static isValid(transaction) {
         const validator = new Validator(
             Transaction.validationFields(transaction).concat([
                 {
-                    validations: ['nullable', 'integer'],
+                    validations: ['required', 'integer'],
                     name: 'minedInBlockIndex',
                     value: transaction.minedInBlockIndex
                 },
                 {
-                    validations: ['nullable', 'boolean'],
+                    validations: ['required', 'boolean'],
                     name: 'transferSuccessful',
                     value: transaction.transferSuccessful
                 },
