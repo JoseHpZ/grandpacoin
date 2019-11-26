@@ -5,7 +5,7 @@ const Block = require('../models/Block');
 const Address = require('../models/Address');
 const { unprefixedAddress } = require('../../utils/functions');
 const eventEmmiter = require('../Sockets/eventEmmiter');
-
+const { getIPAddress } = require('../Sockets/socketsFunctions');
 
 class BlockchainController {
     static async resetChain({ res }) {
@@ -23,7 +23,7 @@ class BlockchainController {
         return res.json({
             addresses: Address.getAddressesBalances(),
             chain: blockchain.chain,
-            selfUrl: req.protocol + '://' + req.get('host'),
+            selfUrl: req.protocol + '://' + getIPAddress() + ':' + global.PORT,
             nodeId: blockchain.nodeId,
             coins: global.coins,
             peers: blockchain.peers,

@@ -46,6 +46,7 @@ class ServerSocket {
         io.listen(ServerSocket.port);
         io.on('connect', (socket) => {
             console.log(withColor('\n----> new peer request <----'))
+            // socket.join(global.ROOMS.PUBLIC);
             socket.emit(global.CHANNELS.NEW_CONNECTION, {
                 ...blockchain.getInfo(),
                 nodeUrl: global.serverSocketUrl,
@@ -58,7 +59,7 @@ class ServerSocket {
                 }
             });
 
-            socket.on(global.CHANNELS.CLIENT_CHANNEL, (data) => ServerSocket.actionsHandler(data, socket));
+            socket.on(global.CHANNELS.CLIENT_CHANNEL, (data) => ServerSocket.actionsHandler(data));
         })
         eventEmmiter.on('new_chain', (chain) => {
             io.emit(global.CHANNELS.CLIENT_CHANNEL, {
@@ -90,23 +91,23 @@ class ServerSocket {
         console.log(withColor('Server peers socket listening in port:') + this.port);
     }
 
-    static actionsHandler(data, socket) {
+    static actionsHandler(data) {
         switch (data.actionType) {
             case global.CHANNELS_ACTIONS.GET_CHAIN:
-                socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                     actionType: global.CHANNELS_ACTIONS.NEW_CHAIN,
                     chain: blockchain.chain,
                 })
                 break;
             case global.CHANNELS_ACTIONS.GET_PENDING_TX:
-                socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                     actionType: global.CHANNELS_ACTIONS.SET_PENDING_TRANSACTIONS,
                     pendingTransactions: blockchain.pendingTransactions,
                 })
                 console.log('\nSending pending transactions...')
                 break;
             case global.CHANNELS_ACTIONS.GET_INFO:
-                socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                     actionType: global.CHANNELS_ACTIONS.RECEIVE_INFO,
                     info: {
                         ...blockchain.getInfo(),

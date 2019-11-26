@@ -95,6 +95,7 @@ class TransactionController {
                 message: 'Transaction already exists.',
             });
         }
+        
         if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
             return response
                 .status(400)

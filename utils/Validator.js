@@ -16,6 +16,13 @@ class Validator extends ValidatorRules {
         this.generalMessage = message;
     }
 
+    addRule(rule) {
+        if (typeof rule === 'object' && !Array.isArray(rule))
+            this.data.push(rule)
+        else
+            throw new Error('Invalid rule, only accept an object.');
+    }
+
     resetValidations() {
         this.existsError = false;
         this.errors = {};
