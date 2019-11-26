@@ -91,10 +91,7 @@ class ServerSocket {
             case global.CHANNELS_ACTIONS.GET_INFO:
                 io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                     actionType: global.CHANNELS_ACTIONS.RECEIVE_INFO,
-                    info: {
-                        ...blockchain.getInfo(),
-                        peerUrl: global.serverSocketUrl,
-                    },
+                    info: Peer.getPeerInfo(),
                 });
                 console.log('\nSending information...')
                 break;

@@ -30,7 +30,7 @@ class ClientSocket {
                         this.socket.disconnect();
                     } else {
                         this.initializeListeners(peerInfo);
-                        console.log(withColor('Connected to peer: ') + peerInfo.nodeUrl)
+                        console.log(withColor('Connected to peer: ') + peerInfo.peerUrl)
                         resolve();
                     }
                 });
