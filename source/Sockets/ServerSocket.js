@@ -43,28 +43,28 @@ class ServerSocket {
 
             socket.on(global.CHANNELS.CLIENT_CHANNEL, (data) => ServerSocket.actionsHandler(data));
         })
-        eventEmmiter.on('new_chain', (chain) => {
+        eventEmmiter.on(global.EVENTS.new_chain, (chain) => {
             io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.NEW_CHAIN,
                 chain,
             })
         })
-        eventEmmiter.on('new_transaction', (transaction) => {
+        eventEmmiter.on(global.EVENTS.new_transaction, (transaction) => {
             console.log(withColor('\nemmiting new transaction to peers...'));
             io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.ADD_NEW_TRANSACTION,
                 transaction,
             })
         })
-        eventEmmiter.on('new_block', (block) => {
+        eventEmmiter.on(global.EVENTS.new_block, (block) => {
             console.log(withColor('\nemmiting new block to peers...'));
             io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.NEW_BLOCK,
                 block,
             })
         })
-        eventEmmiter.on('notify_block', (info) => {
-            console.log(withColor('\nEmmiting new block to peer:') +  info.peerUrl);
+        eventEmmiter.on(global.EVENTS.notify_block, (info) => {
+            console.log(withColor('\nEmmiting new block to peer:') + info.nodeUrl);
             io.to(getPeer(info.peerUrl).socketId).emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.NOTIFY_BLOCK,
                 info,

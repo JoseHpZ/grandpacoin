@@ -31,9 +31,9 @@ function initializeApp() {
             app.use(router);
             ServerSocket.create();
             routes(router);
-            
+
         }).catch(() => {
-            console.log(withColor(`Application PORT ${global.PORT} occupied, try on onother port...`, 'yellow'))
+            console.log(withColor(`Application PORT ${global.PORT} occupied, trying on another port...`, 'yellow'))
             global.PORT += 1;
             initializeApp();
         })

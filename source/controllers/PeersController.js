@@ -52,7 +52,7 @@ class PeersController {
             {
                 customValidations: [{
                     validation: () => Peer.getPeer(nodeUrl),
-                    message: 'You are not connect with the peer ' + nodeUrl + ' consult your peers.',
+                    message: 'You are not connected with peer: ' + nodeUrl + '. Consult your peers.',
                 }],
                 name: 'nodeUrl'
             },
@@ -75,13 +75,13 @@ class PeersController {
         }
 
         process.nextTick(() => {
-            eventEmmiter.emit('notify_block', ({
+            eventEmmiter.emit(global.EVENTS.notify_block, ({
                 blocksCount, cumulativeDifficulty, nodeUrl,
             }))
         });
 
         try {
-            await once(eventEmmiter, 'notify_block');
+            await once(eventEmmiter, global.EVENTS.notify_block);
             return response.status(200).json({
                 message: 'Thank you for the notification.'
             })
@@ -95,7 +95,7 @@ class PeersController {
     static async deletePeer(req, res) {
         if (!Peer.existsPeer(nodeUrl)) {
             response.status(404).json({
-                message: 'You are not syncronized with the peer:  ' + nodeUrl, 
+                message: 'You are not syncronized with peer: ' + nodeUrl,
             })
         }
 

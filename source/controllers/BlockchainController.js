@@ -72,7 +72,7 @@ class BlockchainController {
         const minedBlock = MiningJob.createBlockHash({ difficulty: parseInt(miningJob.difficulty), blockDataHash: miningJob.blockDataHash });
         const { blockHash, blockDataHash, ...blockHeader } = minedBlock;
 
-        
+
         const blockCandidate = blockchain.getBlockCandidate(blockDataHash);
         if (!blockCandidate)
             return res.status(404).json('Block not found or Block already mined.');
@@ -86,9 +86,9 @@ class BlockchainController {
             const transactions = Address.varifyGetAndGenerateBalances(newBlock);
             blockchain.addBlock({ ...newBlock, transactions });
             blockchain.calculateCumulativeDifficult();
-            eventEmmiter.emit('new_block', newBlock); // emit event to Server Socket
+            eventEmmiter.emit(global.EVENTS.new_block, newBlock); // emit event to Server Socket
             return res.status(200).json({
-                message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
+                message: 'Block accepted. Reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
             });
         }
 

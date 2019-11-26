@@ -32,6 +32,7 @@ class Peer {
             about: global.appName,
             peerUrl: `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`,
             cumulativeDifficulty: blockchain.cumulativeDifficulty,
+            nodeId: blockchain.nodeId,
         }
     }
 
@@ -47,12 +48,12 @@ class Peer {
         return BigNumber(cumulativeDifficulty).isGreaterThan(blockchain.cumulativeDifficulty)
     }
 
-    static validateAndSyncronizeChain(chain) {
+    static validateAndSyncronizeChain(chain, socket) {
         let chainLength = chain.length;
-        if (chainLength === blockchain.chain.length && blockchain.getLastBlock().blockHash === chain[chainLength -1 ].blockHash) {
+        if (chainLength === blockchain.chain.length && blockchain.getLastBlock().blockHash === chain[chainLength - 1].blockHash) {
             return;
         }
-    
+
         let isValid = true;
         for (let block of chain) {
             if (!Block.isValid(block)) {
@@ -60,33 +61,42 @@ class Peer {
                 break;
             }
         }
-    
+
         if (!isValid) {
             console.log(withColor('\nThe new chain is invalid.', 'red'));
             return;
         }
-        blockchain.chain = [...chain];
+        // get pending transactions
+        socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+            actionType: global.CHANNELS_ACTIONS.GET_PENDING_TX
+        });
+        blockchain.chain = chain;
         Address.calculateBlockchainBalances();
         blockchain.calculateCumulativeDifficult();
         blockchain.blockCandidates = {};
-        eventEmitter.emit('new_chain', chain);
+        eventEmitter.emit(global.EVENTS.new_chain, chain);
         console.log(withColor('\n<-----Our Chain was replace for a new Chain---->'));
     }
-    
+
     static addPendingTransactions(pendingTransactions) {
         pendingTransactions.forEach(transaction => {
-            Peer.addNewTransaction(transaction);
+            Peer.validateTransactionAndGenerateBalances(transaction);
         });
     }
-    
+
     static addNewTransaction(transaction) {
+        if (Peer.validateTransactionAndGenerateBalances(transaction))
+            eventEmitter.emit(global.EVENTS.new_transaction, transaction); // emit transaction to client peers
+    }
+
+    static validateTransactionAndGenerateBalances(transaction) {
         if (blockchain.getTransactionByHash(transaction.transactionDataHash)) {
             console.log(withColor('Transaction received from peer already exists.', 'yellow'))
-            return;
+            return false;
         }
         if (!Transaction.isValidPendingTransaction(transaction)) {
             console.log(withColor('One peer has send an invalid pending transaction.', 'red'));
-            return;
+            return false;
         }
         
         console.log(withColor('\nAdding new transaction....', 'yellow'))
@@ -102,14 +112,13 @@ class Peer {
             Address.find(transaction.to).pendingToReceive(transaction.value);
             // order pending transaction
             blockchain.orderPendingTransactions();
-            // emit transaction to client peers
-            eventEmitter.emit('new_transaction', transaction);
+            return true;
         }
     }
-    
+
     static addNewBlock(block, socket) {
         if (!Block.isValid(block)) {
-            console.log(withColor('One peer send an invalid block ', 'red'));
+            console.log(withColor('A peer sent an invalid block.', 'red'));
             return;
         }
         let chainLength = blockchain.chain.length;
@@ -118,7 +127,7 @@ class Peer {
             blockchain.addBlock({ ...block, transactions });
             blockchain.calculateCumulativeDifficult();
             console.log(withColor('\nReceive New block from a peer.', 'yellow'));
-            eventEmitter.emit('new_block', block); // emit event to Server Socket
+            eventEmitter.emit(global.EVENTS.new_block, block); // emit event to Server Socket
         } else if(block.index > chainLength) {
             socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_CHAIN,

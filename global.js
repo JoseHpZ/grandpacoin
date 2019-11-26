@@ -35,3 +35,10 @@ global.CHANNELS = {
 global.ROOMS = {
     PUBLIC: 'PUBLIC',
 }
+
+global.EVENTS = {
+    new_chain : 'new_chain',
+    new_transaction : 'new_transaction',
+    new_block : 'new_block',
+    notify_block : 'notify_block',
+}
