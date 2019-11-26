@@ -16,7 +16,7 @@ class Blockchain {
         this.chain = [];
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
-        this.cumulativeDifficult = '0';
+        this.cumulativeDifficulty = '0';
         this.addresses = {};
         this.addressesIds = [];
         this.blockNumber = 0;
@@ -117,29 +117,14 @@ class Blockchain {
         this.pendingTransactions = removePendingTransactions(this.pendingTransactions, transactions);
     }
     
-    getInfo() {
-        return {
-            about: global.appName,
-            nodeId: this.nodeId,
-            // peers: this.peers,
-            chainId: this.chain[0].blockHash,
-            currentDifficult: this.currentDifficulty,
-            blocksCount: this.chain.length,
-            cumulativeDifficulty: this.cumulativeDifficult,
-        }
-    }
-
-    needSyncronization(cumulativeDifficult) {
-        return BigNumber(cumulativeDifficult).isGreaterThan(this.cumulativeDifficult)
-    }
-
     calculateCumulativeDifficult() {
-        this.cumulativeDifficult = this.chain.reduce((cumulativeDifficulty, block) => {
+        this.cumulativeDifficulty = this.chain.reduce((cumulativeDifficulty, block) => {
             return new BigNumber(16)
                 .exponentiatedBy(block.difficulty)
                 .plus(cumulativeDifficulty)
                 .toString()
         }, "0");
+        return this.cumulativeDifficulty;
     }
 }
 

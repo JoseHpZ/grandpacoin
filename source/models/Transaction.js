@@ -1,7 +1,7 @@
 const { sha256 } = require('../../utils/hashes');
 const BigNumber = require('bignumber.js');
-const { isValidAddress } = require('../../utils/functions');
 const Validator = require('../../utils/Validator');
+const { verifySignature } = require('../../utils/transactionFunctions');
 
 class Transaction {
     constructor({ from, to, value, fee, senderPubKey, data, senderSignature, dateCreated }) {
@@ -108,36 +108,87 @@ class Transaction {
         }
     }
 
-    static isCoinbase({ from, data }) {
-        return from === '0000000000000000000000000000000000000000' && data === 'coinbase tx';
+    static isCoinbase(from) {
+        return from === '0000000000000000000000000000000000000000';
     }
 
-    static isValid(transaction) {
-        console.log(transaction)
+    static hashFields(transactions) {
+        return transactions.map(tx => {
+            const { minedInBlockIndex, transferSuccessful, ...restFields } = tx; // get only the necesary data for the hash
+            return restFields;
+        });
+    }
+
+    static isValidPendingTransaction(transaction) {
         const validator = new Validator(
             Transaction.validationFields(transaction).concat([
                 {
-                    validations: ['nullable', 'integer'],
+                    customValidations: [{
+                        validation: () => Transaction.getTransactionDataHash(transaction) === transaction.transactionDataHash,
+                        message: 'Transaction data hash invalid'
+                    }],
+                    name: 'transactionDataHash',
+                },
+            ]
+        ));
+
+        if (!Transaction.isCoinbase(transaction.from)) {
+            validator.addRule({
+                customValidations: [{
+                    validation: () =>  verifySignature(transaction.transactionDataHash, transaction.senderPubKey, transaction.senderSignature),
+                    message: 'Invalid signature',
+                }],
+                name: 'transactionDataHash',
+            });
+        }
+        
+        if (validator.validate().hasError()) {
+            if (validator.getErrors().errors.fee && Transaction.isCoinbase(transaction.from)) {
+                return true;
+            }
+        }
+        return validator.validate().pass();
+    }
+
+    static isValid(transaction) {
+        const validator = new Validator(
+            Transaction.validationFields(transaction).concat([
+                {
+                    validations: ['required', 'integer'],
                     name: 'minedInBlockIndex',
                     value: transaction.minedInBlockIndex
                 },
                 {
-                    validations: ['nullable', 'boolean'],
+                    validations: ['required', 'boolean'],
                     name: 'transferSuccessful',
                     value: transaction.transferSuccessful
                 },
                 {
                     customValidations: [{
-                        validation: () => Transaction.getTransactionDataHash(transaction) === transaction.transactionDataHash
+                        validation: () => Transaction.getTransactionDataHash(transaction) === transaction.transactionDataHash,
+                        message: 'Transaction data hash invalid'
                     }],
                     name: 'transactionDataHash',
-                }
+                },
             ]
-        ))
-        if (validator.validate().hasError()) {
-            console.log(validator.getErrors())
+        ));
+
+        if (!Transaction.isCoinbase(transaction.from)) {
+            validator.addRule({
+                customValidations: [{
+                    validation: () =>  verifySignature(transaction.transactionDataHash, transaction.senderPubKey, transaction.senderSignature),
+                    message: 'Invalid signature',
+                }],
+                name: 'transactionDataHash',
+            });
         }
-        return validator.validate().hasError();
+        
+        if (validator.validate().hasError()) {
+            if (validator.getErrors().errors.fee && Transaction.isCoinbase(transaction.from)) {
+                return true;
+            }
+        }
+        return validator.validate().pass();
     }
 
     static validationFields({
@@ -157,17 +208,16 @@ class Transaction {
             },
             {
                 customValidations: [{
-                    validation: () => BigNumber(fee).isGreaterThanOrEqualTo(global.minimumTransactionFee) && !Transaction.isCoinbase({ from, data, }),
+                    validation: () => BigNumber(fee).isGreaterThanOrEqualTo(global.minimumTransactionFee),
                     message: 'The minimun transaction fee is: ' + global.minimumTransactionFee,
                 }],
-                name: 'fee',
-                value: fee,
+                name: 'fee'
             },
             {
                 validations: ['isValidAddress'],
                 customValidations: [{
                     validation: () => from !== to,
-                    message: 'You can\'t sent money to you own account',
+                    message: 'You can\'t sent money to your own account.',
                 }],
                 names: ['from', 'to'],
                 values: { from, to },

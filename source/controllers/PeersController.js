@@ -1,7 +1,8 @@
 const Peer = require("../models/Peer");
 const Validator = require('../../utils/Validator');
 const ClientSocket = require('../Sockets/ClientSocket');
-
+const eventEmmiter = require('../Sockets/eventEmmiter');
+const { once } = require('events');
 
 class PeersController {
     static async getConnectedPeers(request, response) {
@@ -20,7 +21,7 @@ class PeersController {
             },
             {
                 customValidations: [{
-                    validation: () => !Peer.getPeerByUrl(peerUrl),
+                    validation: () => !Peer.getPeer(peerUrl),
                     message: 'Peer connection already exists.',
                 }],
                 name: 'peerUrl'
@@ -42,9 +43,62 @@ class PeersController {
 
     static async notifyNewBlock(request, response) {
         const { blocksCount, cumulativeDifficulty, nodeUrl } = request.body;
-        return response
-            .status(200)
-            .json({ message: 'Thank you for the notification.', blocksCount, cumulativeDifficulty, nodeUrl })
+        const validator = new Validator([
+            {
+                validations: ['isValidUrl'],
+                name: 'url',
+                value: nodeUrl,
+            },
+            {
+                customValidations: [{
+                    validation: () => Peer.getPeer(nodeUrl),
+                    message: 'You are not connect with the peer ' + nodeUrl + ' consult your peers.',
+                }],
+                name: 'nodeUrl'
+            },
+            {
+                validations: ['required', 'integer'],
+                name: 'blocksCount',
+                value: blocksCount,
+            },
+            {
+                validations: ['required', 'string'],
+                name: 'cumulativeDifficulty',
+                value: cumulativeDifficulty,
+            },
+        ]);
+
+        if (validator.validate().hasError()) {
+            return response
+                .status(400)
+                .json(validator.getErrors());
+        }
+
+        process.nextTick(() => {
+            eventEmmiter.emit('notify_block', ({
+                blocksCount, cumulativeDifficulty, nodeUrl,
+            }))
+        });
+
+        try {
+            await once(eventEmmiter, 'notify_block');
+            return response.status(200).json({
+                message: 'Thank you for the notification.'
+            })
+        } catch (error) {
+            return response.status(500).json({
+                message: 'Unknown error. please try again.',
+            })
+        }
+    }
+
+    static async deletePeer(req, res) {
+        if (!Peer.existsPeer(nodeUrl)) {
+            response.status(404).json({
+                message: 'You are not syncronized with the peer:  ' + nodeUrl, 
+            })
+        }
+
     }
 }
 

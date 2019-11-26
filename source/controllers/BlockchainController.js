@@ -4,7 +4,8 @@ const MiningJob = require('../models/MiningJob');
 const Block = require('../models/Block');
 const Address = require('../models/Address');
 const { unprefixedAddress } = require('../../utils/functions');
-
+const eventEmmiter = require('../Sockets/eventEmmiter');
+const { getIPAddress } = require('../Sockets/socketsFunctions');
 
 class BlockchainController {
     static async resetChain({ res }) {
@@ -15,23 +16,34 @@ class BlockchainController {
     }
 
     static async getInfo(req, res) {
-        return res.json(blockchain.getInfo());
+        return res.json({
+            about: global.appName,
+            nodeId: blockchain.nodeId,
+            nodeUrl: req.protocol + '://' + getIPAddress() + ':' + global.PORT,
+            peerUrl: `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`,
+            peers: blockchain.peers,
+            chainId: blockchain.chain[0].blockHash,
+            currentDifficult: blockchain.currentDifficulty,
+            blocksCount: blockchain.chain.length,
+            cumulativeDifficulty: blockchain.cumulativeDifficulty,
+        });
     }
 
     static async getDebug(req, res) {
         return res.json({
-            addresses: Address.getAddressesBalances(),
-            chain: blockchain.chain,
-            selfUrl: req.protocol + '://' + req.get('host'),
+            nodeUrl: req.protocol + '://' + getIPAddress() + ':' + global.PORT,
+            peerUrl: `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`,
             nodeId: blockchain.nodeId,
-            coins: global.coins,
             peers: blockchain.peers,
-            transactions: blockchain.getConfirmedTransactions(),
             currentDifficult: blockchain.currentDifficulty,
             blocksCount: blockchain.chain.length,
-            cumulativeDifficulty: blockchain.cumulativeDifficult,
-            pendingTransactions: blockchain.pendingTransactions.length,
+            cumulativeDifficulty: blockchain.cumulativeDifficulty,
+            coins: global.coins,
+            addresses: Address.getAddressesBalances(),
+            pendingTransactionsQuantity: blockchain.pendingTransactions.length,
             pendingTransactions: blockchain.pendingTransactions,
+            transactions: blockchain.getConfirmedTransactions(),
+            chain: blockchain.chain,
         });
     }
 
@@ -74,7 +86,7 @@ class BlockchainController {
             const transactions = Address.varifyGetAndGenerateBalances(newBlock);
             blockchain.addBlock({ ...newBlock, transactions });
             blockchain.calculateCumulativeDifficult();
-            blockchain.filterTransfersPendingTransactions(transactions);
+            eventEmmiter.emit('new_block', newBlock); // emit event to Server Socket
             return res.status(200).json({
                 message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
             });

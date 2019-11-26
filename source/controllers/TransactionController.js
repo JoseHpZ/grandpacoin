@@ -71,13 +71,13 @@ class TransactionController {
         
         const senderAddress = Address.find(from);
         const totalAmount = BigNumber(value).plus(fee);
-        // if (!senderAddress.hasFunds(totalAmount)) {
-        //     return response
-        //         .status(400)
-        //         .json({
-        //             message: "Balance is not enough to generate transaction."
-        //         });
-        // }
+        if (!senderAddress.hasFunds(totalAmount)) {
+            return response
+                .status(400)
+                .json({
+                    message: "Balance is not enough to generate transaction."
+                });
+        }
         
         const newTransaction = new Transaction({
             from,
@@ -95,21 +95,15 @@ class TransactionController {
                 message: 'Transaction already exists.',
             });
         }
-        // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
-        //     return response
-        //         .status(400)
-        //         .json({
-        //             message: "Trasaction signature verification invalid."
-        //         });
-        // }
+        
+        if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
+            return response
+                .status(400)
+                .json({
+                    message: "Trasaction signature verification invalid."
+                });
+        }
 
-        // if (!verifySignature(newTransaction.transactionDataHash, senderPubKey, senderSignature)) {
-        //     return response
-        //         .status(400)
-        //         .json({
-        //             message: "Trasaction signature verification invalid."
-        //         });
-        // }
         // add new pending transaction
         blockchain.addPendingTransaction(newTransaction);
         // new from pending balance

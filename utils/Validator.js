@@ -16,6 +16,13 @@ class Validator extends ValidatorRules {
         this.generalMessage = message;
     }
 
+    addRule(rule) {
+        if (typeof rule === 'object' && !Array.isArray(rule))
+            this.data.push(rule)
+        else
+            throw new Error('Invalid rule, only accept an object.');
+    }
+
     resetValidations() {
         this.existsError = false;
         this.errors = {};
@@ -36,16 +43,20 @@ class Validator extends ValidatorRules {
     multipleInputValidation(inputData) {
         for (let name of inputData.names) {
             if (inputData.validations) {
-                inputData.validations.forEach(validation => {
+                for (let validation of inputData.validations) {
                     if (!this.isValidValidation(validation))
                         throw new Error('Invalid validation rule.');
                     
+                    if (this.checkNullValidation(inputData)) {
+                        break;
+                    }
                     const passValidation = this.check(validation, inputData.values[name]);
                     if (passValidation) {
                         this.validInputs[name] = inputData.values[name];
-                        return;
+                        continue;
                     }
-                    
+
+
                     this.existsError = true;
                     const message = this.getErrorMessage(
                         {
@@ -59,7 +70,7 @@ class Validator extends ValidatorRules {
                     } else {
                         this.errors[name].push(message)
                     }
-                })
+                }
             }
             if (inputData.customValidations) {
                 inputData.customValidations.forEach(validation => {
@@ -83,17 +94,21 @@ class Validator extends ValidatorRules {
 
     singleInputValidation(inputData) {
         if (inputData.validations) {
-            inputData.validations.forEach(validation => {
+            for (let validation of inputData.validations) {
                 if (!this.isValidValidation(validation))
                     throw new Error('Invalid validation rule.');
                 
                 const passValidation = this.check(validation, inputData.value);
-                
-                if (passValidation || this.haveNullableOptions(inputData)) {
-                    this.validInputs[inputData.name] = inputData.value;
-                    return;
+
+                if (this.checkNullValidation(inputData)) {
+                    break;
                 }
                 
+                if (passValidation) {
+                    this.validInputs[inputData.name] = inputData.value;
+                    continue;
+                }
+
                 this.existsError = true;
                 const validationName = validation.name || validation;
                 const message = this.getErrorMessage(inputData, validationName);
@@ -102,7 +117,7 @@ class Validator extends ValidatorRules {
                 } else {
                     this.errors[inputData.name].push(message)
                 }
-            })
+            }
 
         }
         if (inputData.customValidations) {
@@ -135,6 +150,10 @@ class Validator extends ValidatorRules {
         return this.existsError;
     }
 
+    pass() {
+        return this.existsError === false;
+    }
+
     getErrorMessage(inputData, validation) {
         if ( inputData.customMessages && inputData.customMessages[validation]) {
             return inputData.customMessages[validation];
@@ -155,8 +174,8 @@ class Validator extends ValidatorRules {
         return messages.hasOwnProperty(validation);
     }
 
-    haveNullableOptions(inputData) {
-        return (inputData.value === undefined || inputData.value === null) && inputData.validations.includes('nullable');
+    checkNullValidation(inputData) {
+        return inputData.validations.includes('nullable') && (inputData.value === undefined || inputData.value === null);
     }
 }
 
@@ -186,10 +205,10 @@ class Validator extends ValidatorRules {
                 validations: ['required', 'string'],
                 name: 'fee',
                 value: 5465
+                customMessages: {
+                    required: 'The fee is required bebex'
+                }
             },
-            customMessages: {
-                required: 'The fee is required bebex'
-            }
         ]);
  */
 

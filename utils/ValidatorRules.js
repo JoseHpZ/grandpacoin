@@ -71,14 +71,7 @@ class ValidatorRules {
     }
 
     isValidUrl(url) {
-        if (!url) return false;
-
-        if (/^(http|https)\:\/\/[a-z0-9\.-]+\.[a-z]{2,4}(\:[0-9]{1,4})?/gi.test(url)
-            || /^(http|https)\:\/\/[a-z0-9\.-]+(\:[0-9]{1,4})?/gi.test(url)
-            || /^(http|https)\:\/\/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(\:[0-9]{1,4})?/gi.test(url)) {
-            return true;
-        }
-        return false;
+        return /^(https?|ftp):\/\/[^\s\/$.?#].[^\s]*$/i.test(url);
     }
 
     date(value) {
