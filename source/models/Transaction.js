@@ -1,7 +1,7 @@
 const { sha256 } = require('../../utils/hashes');
 const BigNumber = require('bignumber.js');
 const Validator = require('../../utils/Validator');
-
+const { verifySignature } = require('../../utils/transactionFunctions');
 
 class Transaction {
     constructor({ from, to, value, fee, senderPubKey, data, senderSignature, dateCreated }) {
@@ -138,9 +138,20 @@ class Transaction {
                         message: 'Transaction data hash invalid'
                     }],
                     name: 'transactionDataHash',
-                }
+                },
             ]
-        ))
+        ));
+
+        if (!Transaction.isCoinbase(transaction.from)) {
+            validator.addRule({
+                customValidations: [{
+                    validation: () =>  verifySignature(transaction.transactionDataHash, transaction.senderPubKey, transaction.senderSignature),
+                    message: 'Invalid signature',
+                }],
+                name: 'transactionDataHash',
+            });
+        }
+        
         if (validator.validate().hasError()) {
             if (validator.getErrors().errors.fee && Transaction.isCoinbase(transaction.from)) {
                 return true;

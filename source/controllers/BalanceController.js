@@ -1,6 +1,6 @@
 const blockchain = require("../models/Blockchain");
 const Address = require('../models/Address');
-const { isValidAddress } = require('../../utils/functions');
+const { isValidAddress, unprefixedAddress } = require('../../utils/functions');
 
 
 class BalanceController {
@@ -19,7 +19,7 @@ class BalanceController {
     static getAllBalancesForAddress({ params: { address }, res }) {
         if (!isValidAddress(address))
             return response.status(400).json({ message: 'Invalid address.' });
-        return res.status(200).json(new Address(address).getStringBalances());
+        return res.status(200).json(Address.find(unprefixedAddress(address)).getStringBalances());
     }
 
     static getAddressTransactions({ params: { address }}, response) {

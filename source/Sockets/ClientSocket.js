@@ -106,7 +106,8 @@ class ClientSocket {
     }
 
     connectionErrorHandler = (reject) => (err) =>  {
-        if (err.description === 503 || err.description === 404) {
+        console.log(err)
+        if (err.description === 404) {
             console.log(withColor('\nPeer not found.', 'yellow'))
             reject({
                 message: 'Peer url not found.',
