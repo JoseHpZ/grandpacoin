@@ -8,14 +8,14 @@ const eventEmmiter = require('../Sockets/eventEmmiter');
 
 
 class BlockController {
-    static async getMiningJob({ params: { minerAddress }}, res) {
+    static async getMiningJob({ params: { minerAddress } }, res) {
         const validator = new Validator([{
             validations: ['isValidAddress'],
             name: 'minerAddress',
             value: minerAddress,
         }])
         if (validator.validate().hasError())
-            return res.status(400).json({ message: 'Invalid block or already mined.' });
+            return res.status(400).json({ message: 'Invalid block or block already mined.' });
 
         blockchain.removeInvalidPendingTransactions();
         const block = Block.getCandidateBlock({
@@ -33,11 +33,11 @@ class BlockController {
     static async getSubmittedBlock({ body }, res) {
         const { blockHash, blockDataHash, ...blockHeader } = body;
         if (blockHash.length !== 64 || blockDataHash.length !== 64)
-            return res.status(400).json({message: 'Invalid data.'});
-        
+            return res.status(400).json({ message: 'Invalid data.' });
+
         const blockCandidate = blockchain.getBlockCandidate(blockDataHash);
         if (!blockCandidate)
-            return res.status(404).json({message: 'Block not found or Block already mined.'});
+            return res.status(404).json({ message: 'Block not found or Block already mined.' });
 
         const newBlock = Block.getBlockObject({
             ...blockCandidate,
@@ -53,8 +53,8 @@ class BlockController {
                 message: 'Block accepted reward paid: ' + blockCandidate.expectedReward + ' Grandson.'
             });
         }
-        
-        return res.status(404).json({message: 'Block not found or Block already mined.'});
+
+        return res.status(404).json({ message: 'Block not found or Block already mined.' });
     }
 
     static async getBlocks(req, res) {
@@ -83,7 +83,7 @@ class BlockController {
         if (block) {
             return res.json(block);
         } else {
-            return res.status(404).json({message: 'Block not found.'});
+            return res.status(404).json({ message: 'Block not found.' });
         }
     }
 }

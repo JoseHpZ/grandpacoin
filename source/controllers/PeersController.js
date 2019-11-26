@@ -52,7 +52,7 @@ class PeersController {
             {
                 customValidations: [{
                     validation: () => Peer.getPeer(nodeUrl),
-                    message: 'You are not connect with the peer ' + nodeUrl + ' consult your peers.',
+                    message: 'You are not connected with peer: ' + nodeUrl + '. Consult your peers.',
                 }],
                 name: 'nodeUrl'
             },
@@ -95,7 +95,7 @@ class PeersController {
     static async deletePeer(req, res) {
         if (!Peer.existsPeer(nodeUrl)) {
             response.status(404).json({
-                message: 'You are not syncronized with the peer:  ' + nodeUrl, 
+                message: 'You are not syncronized with peer: ' + nodeUrl,
             })
         }
 

@@ -31,7 +31,7 @@ class Peer {
     }
 
     static getPeerByUrl(nodeUrl) {
-       return Object.values(Peer.peers).find(peer => peer.nodeUrl !== nodeUrl)
+        return Object.values(Peer.peers).find(peer => peer.nodeUrl !== nodeUrl)
     }
 
     static needSyncronization(cumulativeDifficult) {
@@ -40,10 +40,10 @@ class Peer {
 
     static validateAndSyncronizeChain(chain) {
         let chainLength = chain.length;
-        if (chainLength === blockchain.chain.length && blockchain.getLastBlock().blockHash === chain[chainLength -1 ].blockHash) {
+        if (chainLength === blockchain.chain.length && blockchain.getLastBlock().blockHash === chain[chainLength - 1].blockHash) {
             return;
         }
-    
+
         let isValid = true;
         for (let block of chain) {
             if (!Block.isValid(block)) {
@@ -51,7 +51,7 @@ class Peer {
                 break;
             }
         }
-    
+
         if (!isValid) {
             console.log(withColor('\nThe new chain is invalid.', 'red'));
             return;
@@ -61,15 +61,15 @@ class Peer {
         blockchain.calculateCumulativeDifficult();
         blockchain.blockCandidates = {};
         eventEmitter.emit('new_chain', chain);
-        console.log(withColor('\n<-----Our Chain was replace for a new Chain---->'));
+        console.log(withColor('\n<-----Our Chain was replaced by a new Chain---->'));
     }
-    
+
     static addPendingTransactions(pendingTransactions) {
         pendingTransactions.forEach(transaction => {
             Peer.addNewTransaction(transaction);
         });
     }
-    
+
     static addNewTransaction(transaction) {
         if (blockchain.getTransactionByHash(transaction.transactionDataHash)) {
             console.log(withColor('Transaction received from peer already exists.', 'yellow'))
@@ -77,9 +77,9 @@ class Peer {
         }
         if (!Transaction.isValid(transaction))
             return;
-        
-        console.log(withColor('\nAdding new transaction....', 'yellow'))
-    
+
+        console.log(withColor('\nAdding new transaction...', 'yellow'))
+
         const senderAddress = Address.find(transaction.from);
         const totalAmount = Bignumber(transaction.value).plus(transaction.fee);
         if (senderAddress.hasFunds(totalAmount)) {
@@ -95,20 +95,20 @@ class Peer {
             eventEmitter.emit('new_transaction', transaction);
         }
     }
-    
+
     static addNewBlock(block, socket) {
         if (!Block.isValid(block)) {
-            console.log(withColor('One peer send an invalid block ', 'red'));
+            console.log(withColor('A peer sent an invalid block.', 'red'));
             return;
         }
-        let chainIndex = blockchain.getLastBlock().index;
+        let chainIndex = blockchain.chain.length;
         if (block.index === chainIndex + 1) {
             const transactions = Address.varifyGetAndGenerateBalances(block);
             blockchain.addBlock({ ...block, transactions });
             blockchain.calculateCumulativeDifficult();
-            console.log(withColor('\nReceive New block from a peer.', 'yellow'));
+            console.log(withColor('\nReceived new block from a peer.', 'yellow'));
             eventEmitter.emit('new_block', block); // emit event to Server Socket
-        } else if(block.index > chainIndex + 1) {
+        } else if (block.index > chainIndex + 1) {
             socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_CHAIN,
             })
