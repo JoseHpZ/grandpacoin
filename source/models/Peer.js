@@ -13,41 +13,39 @@ class Peer {
     static peers = {};
 
     static addPeer(peerInfo) {
-        Peer.peers[peerInfo.peerUrl] = peerInfo;
+        Peer.peers[peerInfo.nodeUrl] = peerInfo;
     }
 
-    static removePeer(peerUrl) {
-        if (Peer.peers[peerUrl]) {
-            console.log(`\nPeer: ${peerUrl} removed.`)
-            delete Peer.peers[peerUrl];
+    static removePeer(nodeUrl) {
+        if (Peer.peers[nodeUrl]) {
+            console.log(`\nPeer: ${nodeUrl} removed.`)
+            delete Peer.peers[nodeUrl];
         }
     }
 
-    static getPeer(peerUrl) {
-        return Peer.peers[peerUrl];
+    static getPeer(nodeUrl) {
+        return Peer.peers[nodeUrl];
     }
 
     static getPeerInfo() {
-        const ipAddress = getIPAddress();
         return {
             about: global.appName,
-            peerUrl: `http://${ipAddress}:${global.SERVER_SOCKET_PORT}`,
-            nodeUrl: `http://${ipAddress}:${global.PORT}`,
+            nodeUrl: `http://${getIPAddress()}:${global.PORT}`,
             cumulativeDifficulty: blockchain.cumulativeDifficulty,
             nodeId: blockchain.nodeId,
         }
     }
     
     static getLocalPeerUrl() {
-        return `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`;
+        return `http://${getIPAddress()}:${global.PORT}`;
     }
 
-    static existsPeer(peerUrl) {
-        return Peer.peers.hasOwnProperty(peerUrl);
+    static existsPeer(nodeUrl) {
+        return Peer.peers.hasOwnProperty(nodeUrl);
     }
 
-    static getPeerByUrl(peerUrl) {
-       return Object.values(Peer.peers).find(peer => peer.peerUrl !== peerUrl)
+    static getPeerByUrl(nodeUrl) {
+       return Object.values(Peer.peers).find(peer => peer.nodeUrl !== nodeUrl)
     }
 
     static needSyncronization(cumulativeDifficulty) {

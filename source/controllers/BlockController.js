@@ -87,7 +87,7 @@ class BlockController {
         if (validator.validate().hasError())
             return res.status(400).json(validator.getErrors());
 
-        const block = blockchain.chain.find(block => block.blockHash === req.params.hash)
+        const block = blockchain.chain.find(block => block.blockHash === hash)
         if (block) {
             return res.json(block);
         } else {

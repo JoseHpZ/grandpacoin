@@ -1,5 +1,5 @@
 const { unprefixedAddress } = require('../../utils/functions');
-const { hasFunds, verifySignature } = require('../../utils/transactionFunctions');
+const { verifySignature } = require('../../utils/transactionFunctions');
 const blockchain = require("../models/Blockchain");
 const Transaction = require("../models/Transaction");
 const BigNumber = require('bignumber.js');
@@ -10,17 +10,23 @@ const eventEmmiter = require('../Sockets/eventEmmiter');
 
 class TransactionController {
     static getPendingTransactions({ res }) {
-        return res.status(200).json(blockchain.pendingTransactions);
+        return res.status(200).json(
+            blockchain.pendingTransactions
+                .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated))
+        );
     }
 
     static getConfirmedTransactions(req, res) {
         let transactions;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
-            transactions = blockchain.getConfirmedTransactions().slice(-3);
+            transactions = blockchain.getConfirmedTransactions().slice(-3).reverse();
         } else {
             transactions = blockchain.getConfirmedTransactions();
         }
-        return res.status(200).json(transactions);
+        return res.status(200).json(
+            transactions
+                .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated))
+        );
     }
 
     static getAllTransactions({ res }) {
@@ -42,7 +48,7 @@ class TransactionController {
                 .json(validation.getErrors());
         }
 
-        const transaction = blockchain.getTransactionByHash(hash);
+        const transaction = blockchain.getTransactionByHash(unprefixedAddress(hash));
         if (transaction) return response.status(200).json(transaction);
 
         return response.status(404).json({ message: "Transaction not found" });
