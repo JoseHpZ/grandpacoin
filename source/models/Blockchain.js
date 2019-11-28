@@ -16,13 +16,13 @@ class Blockchain {
         this.chain = [];
         this.pendingTransactions = [];
         this.currentDifficulty = global.initialDifficulty;
-        this.cumulativeDifficulty = '0';
         this.addresses = {};
         this.addressesIds = [];
         this.blockNumber = 0;
         this.blockCandidates = {};
         this.totalBlockTime = 0;
         this.generateGenesisBlock();
+        this.calculateCumulativeDifficult();
     }
 
     getTransactionByHash(hash) {
