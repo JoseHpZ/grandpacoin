@@ -28,12 +28,18 @@ class Peer {
     }
 
     static getPeerInfo() {
+        const ipAddress = getIPAddress();
         return {
             about: global.appName,
-            peerUrl: `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`,
+            peerUrl: `http://${ipAddress}:${global.SERVER_SOCKET_PORT}`,
+            nodeUrl: `http://${ipAddress}:${global.PORT}`,
             cumulativeDifficulty: blockchain.cumulativeDifficulty,
             nodeId: blockchain.nodeId,
         }
+    }
+    
+    static getLocalPeerUrl() {
+        return `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`;
     }
 
     static existsPeer(peerUrl) {

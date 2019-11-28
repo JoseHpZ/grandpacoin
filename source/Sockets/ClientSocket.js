@@ -7,7 +7,7 @@ class ClientSocket {
     constructor(peerNodeUrl) {
         this.socket = io(peerNodeUrl, {
             timeout: 10000,
-            reconnectionDelay: 3000,
+            reconnectionDelay: 2000,
         });
         this.serverNodeUrl = peerNodeUrl;
     }
@@ -22,9 +22,9 @@ class ClientSocket {
                             status: 409,
                         });
                         this.socket.disconnect();
-                    } else if (global.serverSocketUrl === peerInfo.peerUrl) {
+                    } else if (Peer.getLocalPeerUrl() === peerInfo.peerUrl) {
                         reject({
-                            message: 'Invalid peer ID.',
+                            message: 'Invalid peer ID, you can not connet to your own node.',
                             status: 409,
                         });
                         this.socket.disconnect();
@@ -64,7 +64,7 @@ class ClientSocket {
             this.reconnectionHandler();
         })
         this.socket.on('reconnecting', (attemps) => {
-            if (attemps > 5) {
+            if (attemps > 10) {
                 this.socket.disconnect();
                 console.log(withColor('\nSomething happened with the peer server: ', 'yellow') + this.serverNodeUrl)
                 Peer.removePeer(this.serverNodeUrl);
@@ -88,6 +88,7 @@ class ClientSocket {
             this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_PENDING_TX
             });
+            console.log('pending')
         }
 
     }
@@ -125,7 +126,7 @@ class ClientSocket {
                 this.syncronizationDataEmits(data.info.cumulativeDifficulty);
                 break;
             case global.CHANNELS_ACTIONS.NEW_CHAIN:
-                Peer.validateAndSyncronizeChain(data.chain);
+                Peer.validateAndSyncronizeChain(data.chain, this.socket);
                 break;
             case global.CHANNELS_ACTIONS.SET_PENDING_TRANSACTIONS:
                 Peer.addPendingTransactions(data.pendingTransactions);
