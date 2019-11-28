@@ -9,6 +9,7 @@ module.exports = {
     isValidPublicKey: 'The @input must be a valid public key.',
     isValidSignature: 'The @input must be a valid signature.',
     isValidTransactionHash: 'The @input must be a valid transaction hash.',
+    isValidBlockHash: 'The @input must be a valid block hash.',
     isValidAddress: 'The @input must be a valid address.',
     isValidUrl: 'The @input is not valid',
     date: 'The @input must be a valid date.',
