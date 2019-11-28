@@ -1,5 +1,5 @@
 const { unprefixedAddress } = require('../../utils/functions');
-const { hasFunds, verifySignature } = require('../../utils/transactionFunctions');
+const { verifySignature } = require('../../utils/transactionFunctions');
 const blockchain = require("../models/Blockchain");
 const Transaction = require("../models/Transaction");
 const BigNumber = require('bignumber.js');
@@ -42,7 +42,7 @@ class TransactionController {
                 .json(validation.getErrors());
         }
 
-        const transaction = blockchain.getTransactionByHash(hash);
+        const transaction = blockchain.getTransactionByHash(unprefixedAddress(hash));
         if (transaction) return response.status(200).json(transaction);
 
         return response.status(404).json({ message: "Transaction not found" });
