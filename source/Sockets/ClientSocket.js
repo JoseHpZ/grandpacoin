@@ -16,21 +16,21 @@ class ClientSocket {
         return new Promise((resolve, reject) => {
             this.socket.on('connect', () => {
                 this.socket.on(global.CHANNELS.NEW_CONNECTION, (peerInfo) => {
-                    if (Peer.existsPeer(peerInfo.peerUrl)) {
+                    if (Peer.existsPeer(peerInfo.nodeUrl)) {
                         reject({
                             message: 'Connection already exists.',
                             status: 409,
                         });
                         this.socket.disconnect();
-                    } else if (Peer.getLocalPeerUrl() === peerInfo.peerUrl) {
+                    } else if (Peer.getLocalPeerUrl() === peerInfo.nodeUrl) {
                         reject({
-                            message: 'Invalid peer ID, you can not connet to your own node.',
+                            message: 'Invalid peer URL, you can not connet to your own node.',
                             status: 409,
                         });
                         this.socket.disconnect();
                     } else {
                         this.initializeListeners(peerInfo);
-                        console.log(withColor('Connected to peer: ') + peerInfo.peerUrl)
+                        console.log(withColor('Connected to peer: ') + peerInfo.nodeUrl)
                         resolve();
                     }
                 });
@@ -59,12 +59,12 @@ class ClientSocket {
          * EVENTS LISTENERS
          */
 
-        // reconnection with the peer if his server are down and comeback before five attemps
+        // reconnection with the peer if his server are down
         this.socket.on('reconnect', () => {
             this.reconnectionHandler();
         })
         this.socket.on('reconnecting', (attemps) => {
-            if (attemps > 10) {
+            if (attemps > 150) { // try to reconnect 150 times each 2 seconds = 5 min
                 this.socket.disconnect();
                 console.log(withColor('\nSomething happened with the peer server: ', 'yellow') + this.serverNodeUrl)
                 Peer.removePeer(this.serverNodeUrl);
@@ -88,7 +88,7 @@ class ClientSocket {
             this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_PENDING_TX
             });
-            console.log('pending')
+            console.log(withColor('\ngetting pengin transactions', 'cyan'))
         }
 
     }
@@ -122,7 +122,6 @@ class ClientSocket {
         switch (data.actionType) {
             case global.CHANNELS_ACTIONS.RECEIVE_INFO:
             case global.CHANNELS_ACTIONS.NOTIFY_BLOCK:
-                console.log(withColor('\Reinitializing synchronization with peer.', 'yellow'))
                 this.syncronizationDataEmits(data.info.cumulativeDifficulty);
                 break;
             case global.CHANNELS_ACTIONS.NEW_CHAIN:
