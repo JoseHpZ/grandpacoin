@@ -2,7 +2,7 @@ const io = require('socket.io')();
 const { checkPort, getIPAddress } = require('./socketsFunctions');
 const blockchain = require('../models/Blockchain')
 const { existsPeer, getPeer, getPeerInfo } = require('../models/Peer');
-const { withColor } = require('../../utils/functions');
+const { withColor, isValidUrl } = require('../../utils/functions');
 const ClientSocket = require('./ClientSocket');
 const eventEmmiter = require('./eventEmmiter');
 
@@ -30,10 +30,14 @@ class ServerSocket {
     static initializeSocket() {
         io.listen(ServerSocket.port);
         io.on('connect', (socket) => {
-            console.log(withColor('\n----> new peer request <----'))
             // socket.join(global.ROOMS.PUBLIC);
             socket.emit(global.CHANNELS.NEW_CONNECTION, getPeerInfo());
             socket.on(global.CHANNELS.NEW_CONNECTION, (peerInfo) => {
+                console.log(withColor('\n----> new peer request <----', 'yellow'))
+                if (typeof peerInfo !== 'object' || Array.isArray(peerInfo) || !isValidUrl(peerInfo.peerUrl)) {
+                    socket.disconnect();
+                    return;
+                }
                 // make a new client of this server to the new peer
                 if (!existsPeer(peerInfo.peerUrl)) {
                     console.log(withColor('\ntrying connect with peer: ') + peerInfo.peerUrl)
@@ -91,7 +95,7 @@ class ServerSocket {
             case global.CHANNELS_ACTIONS.GET_INFO:
                 io.emit(global.CHANNELS.CLIENT_CHANNEL, {
                     actionType: global.CHANNELS_ACTIONS.RECEIVE_INFO,
-                    info: Peer.getPeerInfo(),
+                    info: getPeerInfo(),
                 });
                 console.log('\nSending information...')
                 break;

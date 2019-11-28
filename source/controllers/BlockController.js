@@ -78,7 +78,15 @@ class BlockController {
         return response.json(blockchain.chain[req.params.index]);
     }
 
-    static async getBlockByHash(req, res) {
+    static async getBlockByHash({ params: { hash }}, res) {
+        const validator = new Validator([{
+            validations: ['isValidBlockHash'],
+            name: 'hash',
+            value: hash,
+        }])
+        if (validator.validate().hasError())
+            return res.status(400).json(validator.getErrors());
+
         const block = blockchain.chain.find(block => block.blockHash === req.params.hash)
         if (block) {
             return res.json(block);

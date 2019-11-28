@@ -56,6 +56,14 @@ class Address {
         }
     }
 
+    getUserBalances() {
+        return {
+            safeBalance: this.safeBalance.isGreaterThan('0') ? this.safeBalance.toString() : '0',
+            confirmedBalance: this.confirmedBalance.toString(),
+            pendingBalance: this.pendingBalance.toString(),
+        }
+    }
+
     hasFunds(amount) {
         if (blockchain.pendingTransactions.find((transaction) => transaction.from === this.address)) {
             return this.confirmedBalance.isGreaterThanOrEqualTo(amount) && this.pendingBalance.isGreaterThanOrEqualTo(amount);

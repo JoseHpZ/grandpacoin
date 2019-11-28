@@ -2,6 +2,10 @@ const isObject = function (a) {
     return (!!a) && (a.constructor === Object);
 };
 
+function unprefixed(address) {
+    return  address.replace(/^0x/, '');
+}
+
 class ValidatorRules {
     required(value) {
         if (value === undefined || value === null) {
@@ -46,7 +50,7 @@ class ValidatorRules {
     }
 
     isValidPublicKey(pubKey) {
-        return /^([A-Fa-f0-9]{65})$/.test(pubKey);
+        return /^([A-Fa-f0-9]{65})$/.test(unprefixed(pubKey));
     }
 
     isValidSignature(signature) {
@@ -58,12 +62,15 @@ class ValidatorRules {
     }
 
     isValidTransactionHash(transaction) {
-        return /^([A-Fa-f0-9]{64})$/.test(transaction);
+        return /^([A-Fa-f0-9]{64})$/.test(unprefixed(transaction));
+    }
+    
+    isValidBlockHash(block) {
+        return /^([A-Fa-f0-9]{64})$/.test(unprefixed(block));
     }
 
     isValidAddress(address) {
-        if (!address) return false;
-        return /^([A-Fa-f0-9]{40})$/.test(address.replace(/^0x/, ''));
+        return /^([A-Fa-f0-9]{40})$/.test(unprefixed(address));
     }
     
     array(value) {
