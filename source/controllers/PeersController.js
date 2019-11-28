@@ -98,7 +98,6 @@ class PeersController {
                 message: 'You are not syncronized with peer: ' + nodeUrl,
             })
         }
-
     }
 }
 

@@ -29,7 +29,7 @@ function initializeApp() {
             app.use(express.text());
             app.use(express.urlencoded({ extended: true }));
             app.use(router);
-            ServerSocket.create();
+            ServerSocket.initializeSocket(server);
             routes(router);
 
         }).catch(() => {
