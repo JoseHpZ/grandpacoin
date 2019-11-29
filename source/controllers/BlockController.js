@@ -60,7 +60,7 @@ class BlockController {
     static async getBlocks(req, res) {
         let blocks;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
-            blocks = blockchain.chain.slice(-3);
+            blocks = blockchain.chain.slice(-3).reverse();
         } else {
             blocks = blockchain.chain;
         }

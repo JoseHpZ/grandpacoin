@@ -25,6 +25,7 @@ global.CHANNELS_ACTIONS = {
     RECEIVE_INFO: 'RECEIVE_INFO',
     NOTIFY_BLOCK: 'NOTIFY_BLOCK',
     NEW_PEER: 'NEW_PEER',
+    REMOVE_PEER: 'REMOVE_PEER',
 };
 
 global.CHANNELS = {
@@ -43,4 +44,5 @@ global.EVENTS = {
     new_transaction : 'new_transaction',
     new_block : 'new_block',
     notify_block : 'notify_block',
+    remove_peer : 'remove_peer',
 }

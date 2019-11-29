@@ -1,6 +1,7 @@
 const io = require('socket.io-client');
 const Peer = require('../models/Peer');
 const { withColor } = require('../../utils/functions');
+const eventEmmiter = require('./eventEmmiter');
 
 
 class ClientSocket {
@@ -9,28 +10,23 @@ class ClientSocket {
             timeout: 10000,
             reconnectionDelay: 2000,
         });
-        this.serverNodeUrl = peerNodeUrl;
     }
 
-    connect() {
+    connect(origin = 'client') {
         return new Promise((resolve, reject) => {
             this.socket.on('connect', () => {
-                this.socket.on(global.CHANNELS.NEW_CONNECTION, (peerInfo) => {
-                    if (Peer.existsPeer(peerInfo.nodeUrl)) {
+                this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo(), origin);
+                this.socket.on(global.CHANNELS.NEW_CONNECTION, (data) => {
+                    if (data.status !== 200) {
                         reject({
-                            message: 'Connection already exists.',
-                            status: 409,
-                        });
-                        this.socket.disconnect();
-                    } else if (Peer.getLocalPeerUrl() === peerInfo.nodeUrl) {
-                        reject({
-                            message: 'Invalid peer URL, you can not connet to your own node.',
-                            status: 409,
+                            message: data.message,
+                            status: data.status,
                         });
                         this.socket.disconnect();
                     } else {
-                        this.initializeListeners(peerInfo);
-                        console.log(withColor('Connected to peer: ') + peerInfo.nodeUrl)
+                        this.initializeListeners(data.peerInfo);
+                        console.log(withColor('Connected to peer: ') + data.peerInfo.nodeUrl)
+                        this.serverNodeUrl = data.peerInfo.nodeUrl;
                         resolve();
                     }
                 });
@@ -41,13 +37,12 @@ class ClientSocket {
     }
 
     initializeListeners(peerInfo) {
-        Peer.addPeer({ ...peerInfo, socketId: this.socket.id });
         this.socket.removeAllListeners();
         /**
          * EMITS
          */
         // send data of this node to server
-        this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo());
+        // this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo());
 
         this.syncronizationDataEmits(peerInfo.cumulativeDifficulty);
         /**
@@ -64,16 +59,26 @@ class ClientSocket {
             this.reconnectionHandler();
         })
         this.socket.on('reconnecting', (attemps) => {
-            if (attemps > 150) { // try to reconnect 150 times each 2 seconds = 5 min
+            if (attemps > 15) { // try to reconnect 15
                 this.socket.disconnect();
                 console.log(withColor('\nSomething happened with the peer server: ', 'yellow') + this.serverNodeUrl)
-                Peer.removePeer(this.serverNodeUrl);
             } else {
                 console.log('attemps: ', attemps)
                 console.log(withColor('\nTriying to reconnect with server node id: ') + this.serverNodeUrl);
             }
         })
+        this.socket.on('disconnect', () => {
+            Peer.removePeer(this.serverNodeUrl);
+        })
+        /**
+         * EVENT EMMITERS
+         */
 
+        eventEmmiter.on(global.EVENTS.remove_peer, (nodeUrl) => {
+            if (this.serverNodeUrl === nodeUrl) {
+                this.socket.disconnect();
+            } 
+        })
     }
 
     syncronizationDataEmits(cumulativeDifficulty) {
@@ -82,7 +87,6 @@ class ClientSocket {
             this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_CHAIN
             })
-            console.log('\nGetting new blockchain...')
         } else {
             // get pending transactions
             this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
@@ -94,10 +98,10 @@ class ClientSocket {
     }
 
     reconnectionHandler() {
-        this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo());
-        this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
-            actionType: global.CHANNELS_ACTIONS.GET_INFO,
-        })
+        this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo(), 'client');
+        this.socket.on(global.CHANNELS.NEW_CONNECTION, (data) => {
+            console.log(data)
+        });
     }
 
     connectionErrorHandler = (reject) => (err) =>  {
@@ -136,9 +140,17 @@ class ClientSocket {
             case global.CHANNELS_ACTIONS.NEW_BLOCK:
                 Peer.addNewBlock(data.block);
                 break;
+            case global.CHANNELS_ACTIONS.REMOVE_PEER:
+                this.socket.disconnect();
+                Peer.removePeer(this.serverNodeUrl);
+                delete this.socket;
+                console.log(withColor('\nPeer disconnected by request of node URL: ', 'yellow') + this.serverNodeUrl)
+                break;
             default: return;
         }
     }
 }
 
 module.exports = ClientSocket;
+
+
