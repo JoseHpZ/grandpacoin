@@ -4,6 +4,7 @@ const BigNumber = require('bignumber.js');
 const moment = require('moment');
 const { removeTransactionWithoutFunds, removePendingTransactions } = require('../../utils/transactionFunctions')
 const Transaction = require('./Transaction');
+const { getIPAddress } = require('../Sockets/socketsFunctions');
 
 
 class Blockchain {
@@ -125,6 +126,19 @@ class Blockchain {
                 .toString()
         }, "0");
         return this.cumulativeDifficulty;
+    }
+
+    getInfo() {
+        return {
+            about: global.appName,
+            nodeId: this.nodeId,
+            nodeUrl: 'http://' + getIPAddress() + ':' + global.PORT,
+            peers: this.peers,
+            chainId: this.chain[0].blockHash,
+            currentDifficult: this.currentDifficulty,
+            blocksCount: this.chain.length,
+            cumulativeDifficulty: this.cumulativeDifficulty,
+        }
     }
 }
 

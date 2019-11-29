@@ -36,9 +36,14 @@ class ServerSocket {
                     socket.disconnect();
                     return;
                 }
+                console.log(withColor('\nNew peer connected with URL: ') + peerInfo.nodeUrl)
                  
                 // add the peer info
-                addPeer({ ...peerInfo, socketId: socket.id });
+                addPeer({
+                    ...peerInfo,
+                    socketId: socket.id,
+                    dateCreated: new Date().toISOString(),
+                });
                 ServerSocket.clientsUrls[socket.id] = peerInfo.nodeUrl;
                 ServerSocket.sockets[peerInfo.nodeUrl] = socket;
                 // add the socket in the room for nodes
@@ -58,7 +63,6 @@ class ServerSocket {
                 if (origin === 'client')
                     ServerSocket.createNewClientSocket(peerInfo.nodeUrl);
 
-                console.log(withColor('\nNew peer connected with URL: ') + peerInfo.nodeUrl)
             });
 
             
@@ -83,7 +87,13 @@ class ServerSocket {
             io.in(global.ROOMS.NODE).emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.NEW_CHAIN,
                 chain,
-            })
+            });
+            io.in(global.ROOMS.PUBLIC).emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.NEW_CHAIN,
+                pendingTransactions: blockchain.pendingTransactions.slice(10),
+                chain: chain.slice(-10),
+                nodeInfo: blockchain.getInfo(),
+            });
         })
 
         eventEmmiter.on(global.EVENTS.new_transaction, (transaction) => {
