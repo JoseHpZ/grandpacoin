@@ -92,10 +92,40 @@ class PeersController {
         }
     }
 
-    static async deletePeer(req, res) {
-        if (!Peer.existsPeer(nodeUrl)) {
-            response.status(404).json({
-                message: 'You are not syncronized with peer: ' + nodeUrl,
+    static async deletePeer({ params: { nodeUrl }}, response) {
+        const validator = new Validator([
+            {
+                validations: ['isValidUrl'],
+                name: 'nodeUrl',
+                value: nodeUrl,
+            },
+            {
+                customValidations: [{
+                    validation: () => Peer.getPeer(nodeUrl),
+                    message: 'You are not connected with peer: ' + nodeUrl + '. Consult your peers.',
+                }],
+                name: 'nodeUrl'
+            },
+        ]);
+
+        if (validator.validate().hasError()) {
+            return response
+                .status(400)
+                .json(validator.getErrors());
+        }
+
+        process.nextTick(() => {
+            eventEmmiter.emit(global.EVENTS.remove_peer, ({ nodeUrl }))
+        });
+
+        try {
+            await once(eventEmmiter, global.EVENTS.remove_peer);
+            return response.status(200).json({
+                message: 'The peer has been removed.'
+            })
+        } catch (error) {
+            return response.status(500).json({
+                message: 'Unknown error. please try again.',
             })
         }
     }
