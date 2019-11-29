@@ -1,5 +1,5 @@
 const blockchain = require('../models/Blockchain')
-const { existsPeer, getPeer, getPeerInfo, addPeer } = require('../models/Peer');
+const { existsPeer, getPeer, getPeerInfo, addPeer, removePeer } = require('../models/Peer');
 const { withColor, isValidUrl } = require('../../utils/functions');
 const ClientSocket = require('./ClientSocket');
 const eventEmmiter = require('./eventEmmiter');
@@ -61,7 +61,7 @@ class ServerSocket {
                 })
                 
                 if (origin === 'client')
-                    ServerSocket.createNewClientSocket(peerInfo.nodeUrl);
+                    ServerSocket.createNewClientSocket(peerInfo.nodeUrl, socket);
 
             });
 
@@ -157,11 +157,12 @@ class ServerSocket {
         }
     }
 
-    static async createNewClientSocket(nodeUrl) {
+    static async createNewClientSocket(nodeUrl, socket) {
         try {
             console.log('\nSender request to be peer client...')
             await new ClientSocket(nodeUrl).connect('server');
         } catch (err) {
+            socket.disconnect();
             console.log(withColor('\nError while connect with peer ' + nodeUrl + ' Details: ', 'red'), err)
         }
     }
