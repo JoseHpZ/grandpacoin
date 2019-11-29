@@ -55,7 +55,7 @@ class Peer {
     static validateAndSyncronizeChain(chain, socket) {
         let chainLength = chain.length;
         if (chainLength === blockchain.chain.length && blockchain.getLastBlock().blockHash === chain[chainLength - 1].blockHash) {
-            console.log('The new chain is equal or shorther than the actual chain..');
+            // console.log('The new chain is equal or shorther than the actual chain..');
             return;
         }
 
@@ -96,7 +96,7 @@ class Peer {
 
     static validateTransactionAndGenerateBalances(transaction) {
         if (blockchain.getTransactionByHash(transaction.transactionDataHash)) {
-            console.log(withColor('Transaction received from peer already exists.', 'yellow'))
+            // console.log(withColor('Transaction received from peer already exists.', 'yellow'))
             return false;
         }
         if (!Transaction.isValidPendingTransaction(transaction)) {

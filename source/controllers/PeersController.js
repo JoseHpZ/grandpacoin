@@ -16,17 +16,14 @@ class PeersController {
         const validator = new Validator([
             {
                 validations: ['isValidUrl'],
-                name: 'url',
-                value: peerUrl
-            },
-            {
                 customValidations: [{
                     validation: () => !Peer.getPeer(peerUrl),
                     message: 'Peer connection already exists.',
                 }],
-                name: 'peerUrl'
-            }
-        ]);
+                name: 'peerUrl',
+                value: peerUrl
+            },
+        ], 'Connection already exists.');
         if (validator.validate().hasError()) {
             return response
                 .status(400)
@@ -46,15 +43,12 @@ class PeersController {
         const validator = new Validator([
             {
                 validations: ['isValidUrl'],
-                name: 'url',
-                value: nodeUrl,
-            },
-            {
                 customValidations: [{
                     validation: () => Peer.getPeer(nodeUrl),
                     message: 'You are not connected with peer: ' + nodeUrl + '. Consult your peers.',
                 }],
-                name: 'nodeUrl'
+                name: 'url',
+                value: nodeUrl,
             },
             {
                 validations: ['required', 'integer'],
@@ -92,7 +86,7 @@ class PeersController {
         }
     }
 
-    static async deletePeer({ params: { nodeUrl }}, response) {
+    static async deletePeer({ body: { nodeUrl } }, response) {
         const validator = new Validator([
             {
                 validations: ['isValidUrl'],
@@ -115,7 +109,7 @@ class PeersController {
         }
 
         process.nextTick(() => {
-            eventEmmiter.emit(global.EVENTS.remove_peer, ({ nodeUrl }))
+            eventEmmiter.emit(global.EVENTS.remove_peer, (nodeUrl))
         });
 
         try {

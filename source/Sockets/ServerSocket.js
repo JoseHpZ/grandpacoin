@@ -111,12 +111,10 @@ class ServerSocket {
         })
 
         eventEmmiter.on(global.EVENTS.remove_peer, (nodeUrl) => {
-            console.log(withColor('\nEmmiting block peer request to peer:') + info.nodeUrl);
-            io.to(getPeer(nodeUrl).socketId).emit(global.CHANNELS.CLIENT_CHANNEL, {
-                actionType: global.CHANNELS_ACTIONS.REMOVE_PEER,
-                info,
+            io.to(ServerSocket.sockets[nodeUrl].id).emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.REMOVE_PEER
             });
-            ServerSocket.sockets[peerInfo.nodeUrl].disconnect();
+            ServerSocket.sockets[nodeUrl].disconnect();
         })
         
         console.log(withColor('\n******* Server peers socket listening *******', 'yellow'));
