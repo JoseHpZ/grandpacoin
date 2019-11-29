@@ -19,11 +19,15 @@ class PeersController {
                 customValidations: [{
                     validation: () => !Peer.getPeer(peerUrl),
                     message: 'Peer connection already exists.',
+                },
+                {
+                    validation: () => Peer.getPeerInfo().nodeUrl,
+                    message: 'Invalid peer URL, you can not connect to your own node',
                 }],
                 name: 'peerUrl',
                 value: peerUrl
             },
-        ], 'Connection already exists.');
+        ]);
         if (validator.validate().hasError()) {
             return response
                 .status(400)

@@ -84,17 +84,21 @@ class Peer {
     }
 
     static addPendingTransactions(pendingTransactions) {
+        if (pendingTransactions.length === 0)
+            return;
         pendingTransactions.forEach(transaction => {
-            Peer.validateTransactionAndGenerateBalances(transaction);
+            Peer.validateAddTransactionAndGenerateBalances(transaction);
         });
+        console.log(withColor('\nNew pending transactions was added....', 'yellow'));
     }
 
     static addNewTransaction(transaction) {
-        if (Peer.validateTransactionAndGenerateBalances(transaction))
+        if (Peer.validateAddTransactionAndGenerateBalances(transaction))
             eventEmitter.emit(global.EVENTS.new_transaction, transaction); // emit transaction to client peers
+        console.log(withColor('\nAdding new pending transaction....', 'yellow'));
     }
 
-    static validateTransactionAndGenerateBalances(transaction) {
+    static validateAddTransactionAndGenerateBalances(transaction) {
         if (blockchain.getTransactionByHash(transaction.transactionDataHash)) {
             // console.log(withColor('Transaction received from peer already exists.', 'yellow'))
             return false;
@@ -103,8 +107,6 @@ class Peer {
             console.log(withColor('One peer has send an invalid pending transaction.', 'red'));
             return false;
         }
-        
-        console.log(withColor('\nAdding new transaction....', 'yellow'))
     
         const senderAddress = Address.find(transaction.from);
         const totalAmount = Bignumber(transaction.value).plus(transaction.fee);
@@ -119,14 +121,17 @@ class Peer {
             blockchain.orderPendingTransactions();
             return true;
         }
+        return false;
     }
 
     static addNewBlock(block, socket) {
+        let chainLength = blockchain.chain.length;
+        if (block.index < chainLength)
+            return;
         if (!Block.isValid(block)) {
             console.log(withColor('A peer sent an invalid block.', 'red'));
             return;
         }
-        let chainLength = blockchain.chain.length;
         if (block.index === chainLength) {
             const transactions = Address.varifyGetAndGenerateBalances(block);
             blockchain.addBlock({ ...block, transactions });
@@ -134,6 +139,7 @@ class Peer {
             console.log(withColor('\nReceive New block from a peer.', 'yellow'));
             eventEmitter.emit(global.EVENTS.new_block, block); // emit event to Server Socket
         } else if(block.index > chainLength) {
+            console.log('THE BLOCK INDEX I GREATER THAN OUR CHAIN NEED SYNC')
             socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_CHAIN,
             })

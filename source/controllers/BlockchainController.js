@@ -16,21 +16,12 @@ class BlockchainController {
     }
 
     static async getInfo(req, res) {
-        return res.json({
-            about: global.appName,
-            nodeId: blockchain.nodeId,
-            nodeUrl: req.protocol + '://' + getIPAddress() + ':' + global.PORT,
-            peers: blockchain.peers,
-            chainId: blockchain.chain[0].blockHash,
-            currentDifficult: blockchain.currentDifficulty,
-            blocksCount: blockchain.chain.length,
-            cumulativeDifficulty: blockchain.cumulativeDifficulty,
-        });
+        return res.json(blockchain.getInfo());
     }
 
     static async getDebug(req, res) {
         return res.json({
-            nodeUrl: req.protocol + '://' + getIPAddress() + ':' + global.PORT,
+            nodeUrl: 'http://' + getIPAddress() + ':' + global.PORT,
             nodeId: blockchain.nodeId,
             peers: blockchain.peers,
             currentDifficult: blockchain.currentDifficulty,

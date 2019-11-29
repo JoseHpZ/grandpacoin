@@ -7,7 +7,7 @@ const eventEmmiter = require('./eventEmmiter');
 class ClientSocket {
     constructor(peerNodeUrl) {
         this.socket = io(peerNodeUrl, {
-            timeout: 10000,
+            timeout: 20000,
             reconnectionDelay: 2000,
         });
     }
@@ -25,7 +25,6 @@ class ClientSocket {
                         this.socket.disconnect();
                     } else {
                         this.initializeListeners(data.peerInfo);
-                        console.log(withColor('Connected to peer: ') + data.peerInfo.nodeUrl)
                         this.serverNodeUrl = data.peerInfo.nodeUrl;
                         resolve();
                     }
@@ -92,7 +91,7 @@ class ClientSocket {
             this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.GET_PENDING_TX
             });
-            console.log(withColor('\ngetting pengin transactions', 'cyan'))
+            console.log(withColor('\ngetting pending transactions', 'cyan'))
         }
 
     }
@@ -105,7 +104,7 @@ class ClientSocket {
     }
 
     connectionErrorHandler = (reject) => (err) =>  {
-        if (err.description === 404 || err.description === 503) {
+        if (err.description === 404 || err.description === 503 || err === 'timeout') {
             console.log(withColor('\nPeer not found.', 'yellow'))
             reject({
                 message: 'Peer url not found.',
@@ -138,12 +137,10 @@ class ClientSocket {
                 Peer.addNewTransaction(data.transaction);
                 break;
             case global.CHANNELS_ACTIONS.NEW_BLOCK:
-                Peer.addNewBlock(data.block);
+                Peer.addNewBlock(data.block, this.socket);
                 break;
             case global.CHANNELS_ACTIONS.REMOVE_PEER:
                 this.socket.disconnect();
-                Peer.removePeer(this.serverNodeUrl);
-                delete this.socket;
                 console.log(withColor('\nPeer disconnected by request of node URL: ', 'yellow') + this.serverNodeUrl)
                 break;
             default: return;
