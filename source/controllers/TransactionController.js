@@ -10,17 +10,23 @@ const eventEmmiter = require('../Sockets/eventEmmiter');
 
 class TransactionController {
     static getPendingTransactions({ res }) {
-        return res.status(200).json(blockchain.pendingTransactions);
+        return res.status(200).json(
+            blockchain.pendingTransactions
+                .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated))
+        );
     }
 
     static getConfirmedTransactions(req, res) {
         let transactions;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
-            transactions = blockchain.getConfirmedTransactions().slice(-3);
+            transactions = blockchain.getConfirmedTransactions().slice(-3).reverse();
         } else {
             transactions = blockchain.getConfirmedTransactions();
         }
-        return res.status(200).json(transactions);
+        return res.status(200).json(
+            transactions
+                .sort((actual, next) => Date.parse(next.dateCreated) - Date.parse(actual.dateCreated))
+        );
     }
 
     static getAllTransactions({ res }) {
