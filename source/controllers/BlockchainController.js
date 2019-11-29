@@ -20,7 +20,6 @@ class BlockchainController {
             about: global.appName,
             nodeId: blockchain.nodeId,
             nodeUrl: req.protocol + '://' + getIPAddress() + ':' + global.PORT,
-            peerUrl: `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`,
             peers: blockchain.peers,
             chainId: blockchain.chain[0].blockHash,
             currentDifficult: blockchain.currentDifficulty,
@@ -32,7 +31,6 @@ class BlockchainController {
     static async getDebug(req, res) {
         return res.json({
             nodeUrl: req.protocol + '://' + getIPAddress() + ':' + global.PORT,
-            peerUrl: `http://${getIPAddress()}:${global.SERVER_SOCKET_PORT}`,
             nodeId: blockchain.nodeId,
             peers: blockchain.peers,
             currentDifficult: blockchain.currentDifficulty,

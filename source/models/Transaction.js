@@ -2,6 +2,8 @@ const { sha256 } = require('../../utils/hashes');
 const BigNumber = require('bignumber.js');
 const Validator = require('../../utils/Validator');
 const { verifySignature } = require('../../utils/transactionFunctions');
+const ripemd160 = require('ripemd160');
+
 
 class Transaction {
     constructor({ from, to, value, fee, senderPubKey, data, senderSignature, dateCreated }) {
@@ -191,6 +193,10 @@ class Transaction {
         return validator.validate().pass();
     }
 
+    static isValidAddressOfPublicKey(address, publicKeyCompressed) {
+        return Transaction.isCoinbase(address) || new ripemd160().update(publicKeyCompressed).digest('hex') === address;
+    }
+
     static validationFields({
         data, value, fee, from, to, senderPubKey, senderSignature,
         dateCreated
@@ -224,6 +230,9 @@ class Transaction {
             },
             {
                 validations: ['isValidPublicKey'],
+                customValidations: [{
+                    validation: () => Transaction.isValidAddressOfPublicKey(from, senderPubKey),
+                }],
                 name: 'senderPubKey',
                 value: senderPubKey
             },
