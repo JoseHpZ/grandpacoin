@@ -31,7 +31,6 @@ class BlockchainController {
             addresses: Address.getAddressesBalances(),
             pendingTransactionsQuantity: blockchain.pendingTransactions.length,
             pendingTransactions: blockchain.pendingTransactions,
-            transactions: blockchain.getConfirmedTransactions(),
             chain: blockchain.chain,
         });
     }
@@ -53,10 +52,11 @@ class BlockchainController {
                 value: difficulty
             }
         ]);
+
         if (validator.validate().hasError()) {
             return res.status(400).json(validator.getErrors())
         };
-        const miningJob = MiningJob.get({ minerAddress: unprefixedAddress(minerAddress), difficulty });
+        const miningJob = MiningJob.get({ minerAddress: unprefixedAddress(minerAddress), difficulty: parseInt(difficulty) });
 
         const minedBlock = MiningJob.createBlockHash({ difficulty: parseInt(miningJob.difficulty), blockDataHash: miningJob.blockDataHash });
         const { blockHash, blockDataHash, ...blockHeader } = minedBlock;
