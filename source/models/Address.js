@@ -114,8 +114,6 @@ class Address {
         if (!this.pendingBalance.isZero()) {
             this.pendingBalance = this.pendingBalance.plus(expectedReward);
         }
-        console.log('pending balance: ' + this.pendingBalance)
-        console.log('confirmedBalance : ' + this.confirmedBalance)
         if (this.pendingBalance.isEqualTo(this.confirmedBalance)) {
             this.pendingBalance = BigNumber('0');
         }
