@@ -66,11 +66,8 @@ class Blockchain {
 
             if (averageTime.isLessThan(5)) {
                 this.currentDifficulty += 1;
-            } else if (averageTime.isGreaterThanOrEqualTo(2)) {
+            } else {
                 this.currentDifficulty -= 1;
-            }
-            if (averageTime.isZero()) {
-                this.currentDifficulty = 1;
             }
         }
     }
