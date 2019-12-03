@@ -1,7 +1,43 @@
+require('./global');
 const express = require('express');
 const app = express();
-const port = 3333;
+const routes = require('./source/routes.js');
+const router = express.Router();
+const { setCorsHeadersMiddleware } = require('./utils/cors');
+const { checkPort } = require('./source/Sockets/socketsFunctions');
+const { withColor } = require('./utils/functions');
+// socket server
+const ServerSocket = require('./source/Sockets/ServerSocket');
+const server = require('http').Server(app)
 
-app.get('/', (req, res) => res.send('Hello World!'));
+app.use(setCorsHeadersMiddleware);
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+console.clear()
+console.log('----------------------------------------------')
+global.PORT = 5555;
+function initializeApp() {
+    checkPort(global.PORT)
+        .then(() => {
+            server.listen(global.PORT, () => {
+                console.log(withColor('App listening on port: ') + global.PORT);
+            });
+            app.on('error', (err) => {
+                console.log(err)
+            })
+            app.use(setCorsHeadersMiddleware);
+            app.use(express.json());
+            app.use(express.text());
+            app.use(express.urlencoded({ extended: true }));
+            app.use(router);
+            ServerSocket.initializeSocket(server);
+            routes(router);
+
+        }).catch(() => {
+            console.log(withColor(`Application PORT ${global.PORT} occupied, trying on another port...`, 'yellow'))
+            global.PORT += 1;
+            initializeApp();
+        })
+}
+
+initializeApp();
+
