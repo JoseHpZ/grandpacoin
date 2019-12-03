@@ -45,8 +45,10 @@ class BlockController {
         });
 
         if (newBlock.blockHash === blockHash && (newBlock.index === blockchain.getLastBlock().index + 1)) {
-            const transactions = Address.varifyGetAndGenerateBalances(newBlock);
+            // const transactions = Address.varifyGetAndGenerateBalances(newBlock);
+            const transactions = Address.getTransactionsStatuses(newBlock);
             blockchain.addBlock({ ...newBlock, transactions });
+            Address.calculateBlockchainBalances();
             blockchain.calculateCumulativeDifficult();
             eventEmmiter.emit(global.EVENTS.new_block, newBlock); // emit event to Server Socket
             return res.status(200).json({

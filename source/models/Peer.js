@@ -134,8 +134,8 @@ class Peer {
         }
         if (block.index === chainLength) {
             const transactions = Address.getTransactionsStatuses(block);
-            Address.calculateBlockchainBalances();
             blockchain.addBlock({ ...block, transactions });
+            Address.calculateBlockchainBalances();
             blockchain.calculateCumulativeDifficult();
             console.log(withColor('\nReceive New block from a peer.', 'yellow'));
             eventEmitter.emit(global.EVENTS.new_block, block); // emit event to Server Socket
