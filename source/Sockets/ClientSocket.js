@@ -99,7 +99,9 @@ class ClientSocket {
     reconnectionHandler() {
         this.socket.emit(global.CHANNELS.NEW_CONNECTION, Peer.getPeerInfo(), 'client');
         this.socket.on(global.CHANNELS.NEW_CONNECTION, (data) => {
-            console.log(data)
+            this.socket.emit(global.CHANNELS.CLIENT_CHANNEL, {
+                actionType: global.CHANNELS_ACTIONS.GET_PENDING_TX
+            });
         });
     }
 

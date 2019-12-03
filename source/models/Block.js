@@ -137,8 +137,11 @@ class Block extends GranpaCoin {
                 value: block,
                 name: 'block',
             },
-        ]);
-        return validator.validate().pass();
+        ]).validate();
+        if (validator.hasError()) {
+            console.log(validator.getErrors())
+        }
+        return validator.pass();
     }
     constructor({index, transactions, difficulty, prevBlockHash, minedBy, nonce, dateCreated, blockDataHash, blockHash}) {
         super();

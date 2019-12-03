@@ -147,9 +147,11 @@ class Transaction {
         if (validator.validate().hasError()) {
             if (validator.getErrors().errors.fee && Transaction.isCoinbase(transaction.from)) {
                 return true;
+            } else {
+                console.log(validator.getErrors())
             }
         }
-        return validator.validate().pass();
+        return validator.pass();
     }
 
     static isValid(transaction) {
