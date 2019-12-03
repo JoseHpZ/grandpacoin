@@ -82,9 +82,9 @@ class Address {
         this.pendingBalance = this.pendingBalance.isEqualTo(this.confirmedBalance)
                 ? BigNumber('0')
                 : this.pendingBalance;
-        console.log('sending')
-        console.log('pending balance: ' + this.pendingBalance)
-        console.log('confirmedBalance : ' + this.confirmedBalance)
+        // console.log('sending')
+        // console.log('pending balance: ' + this.pendingBalance)
+        // console.log('confirmedBalance : ' + this.confirmedBalance)
         this.updateChain();
     }
 
