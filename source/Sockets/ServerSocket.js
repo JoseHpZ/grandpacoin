@@ -106,7 +106,7 @@ class ServerSocket {
         
         eventEmmiter.on(global.EVENTS.new_block, (block) => {
             console.log(withColor('\nemmiting new block to peers...'));
-            io.emit(global.CHANNELS.CLIENT_CHANNEL, {
+            io.to(global.ROOMS.NODE).emit(global.CHANNELS.CLIENT_CHANNEL, {
                 actionType: global.CHANNELS_ACTIONS.NEW_BLOCK,
                 block,
             })

@@ -173,7 +173,7 @@ class Transaction {
                     name: 'transactionDataHash',
                 },
             ]
-            ));
+        ));
 
         if (!Transaction.isCoinbase(transaction.from)) {
             validator.addRule({

@@ -76,12 +76,17 @@ class Address {
     }
 
     send(totalAmount) {
-        this.pendingBalance = this.pendingBalance.plus(totalAmount).isEqualTo(this.confirmedBalance)
+        this.pendingBalance = this.pendingBalance.isEqualTo(this.confirmedBalance)
                 ? BigNumber('0')
                 : this.pendingBalance;
 
         this.safeBalance = this.safeBalance.minus(totalAmount);
         this.confirmedBalance = this.confirmedBalance.minus(totalAmount)
+      
+        
+        // console.log('sending')
+        // console.log('pending balance: ' + this.pendingBalance)
+        // console.log('confirmedBalance : ' + this.confirmedBalance)
         this.updateChain();
     }
 
@@ -104,13 +109,15 @@ class Address {
         const newPending = this.pendingBalance.minus(amount);
         this.pendingBalance = newPending.isNegative() ? BigNumber('0') : newPending;
         this.updateChain();
-
     }
     
     payReward(expectedReward) {
         this.confirmedBalance = this.confirmedBalance.plus(expectedReward);
         if (!this.pendingBalance.isZero()) {
             this.pendingBalance = this.pendingBalance.plus(expectedReward);
+        }
+        if (this.pendingBalance.isEqualTo(this.confirmedBalance)) {
+            this.pendingBalance = BigNumber('0');
         }
         this.updateChain();
     }
@@ -151,7 +158,7 @@ class Address {
         blockchain.chain.forEach(block => {
             block.transactions.forEach((transaction) => {
                 Address.generateTransactionBalances(transaction);
-                if (blockchain.chain.length - transaction.minedInBlockIndex > 5) {
+                if (blockchain.chain.length - transaction.minedInBlockIndex > 6) {
                     Address.find(transaction.to).alterSafeBalance(transaction.value);
                 }
             });
@@ -185,7 +192,7 @@ class Address {
 
     static generateTransactionBalances(transaction) {
         let success = true;
-        // block reward transaction
+        // block reward transaction coinbase
         if (transaction.from === '0000000000000000000000000000000000000000') {
             Address.find(transaction.to).payReward(transaction.value);
             return success;
@@ -202,6 +209,28 @@ class Address {
             toAddress.cancelPendingReceived(transaction.value);
         }
         return success;
+    }
+
+    static getTransactionsStatuses(block) {
+        let transactions = [];
+        block.transactions.forEach((transaction) => {
+            const fromAddress = Address.find(transaction.from);
+            if (fromAddress.hasFunds(BigNumber(transaction.value).plus(transaction.fee))) {
+                transactions.push({
+                    ...transaction,
+                    minedInBlockIndex: block.index,
+                    transferSuccessful: true,
+                });
+            } else {
+                transactions.push({
+                    ...transaction,
+                    minedInBlockIndex: block.index,
+                    transferSuccessful: false,
+                });
+            }
+        });
+        blockchain.filterTransfersPendingTransactions(transactions);
+        return transactions;
     }
 
     static checkSafeBalances(blockIndex) {

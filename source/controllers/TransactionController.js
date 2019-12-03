@@ -19,7 +19,7 @@ class TransactionController {
     static getConfirmedTransactions(req, res) {
         let transactions;
         if (req.query.latest && req.query.latest.toLowerCase() === 'true') {
-            transactions = blockchain.getConfirmedTransactions().slice(-3).reverse();
+            transactions = blockchain.getConfirmedTransactions().slice(-3);
         } else {
             transactions = blockchain.getConfirmedTransactions();
         }
