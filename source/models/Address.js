@@ -76,12 +76,14 @@ class Address {
     }
 
     send(totalAmount) {
-        this.safeBalance = this.safeBalance.minus(totalAmount);
-        this.confirmedBalance = this.confirmedBalance.minus(totalAmount)
-      
         this.pendingBalance = this.pendingBalance.isEqualTo(this.confirmedBalance)
                 ? BigNumber('0')
                 : this.pendingBalance;
+
+        this.safeBalance = this.safeBalance.minus(totalAmount);
+        this.confirmedBalance = this.confirmedBalance.minus(totalAmount)
+      
+        
         // console.log('sending')
         // console.log('pending balance: ' + this.pendingBalance)
         // console.log('confirmedBalance : ' + this.confirmedBalance)
@@ -156,7 +158,7 @@ class Address {
         blockchain.chain.forEach(block => {
             block.transactions.forEach((transaction) => {
                 Address.generateTransactionBalances(transaction);
-                if (blockchain.chain.length - transaction.minedInBlockIndex > 5) {
+                if (blockchain.chain.length - transaction.minedInBlockIndex > 6) {
                     Address.find(transaction.to).alterSafeBalance(transaction.value);
                 }
             });
