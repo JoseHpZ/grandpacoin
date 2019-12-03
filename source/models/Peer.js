@@ -133,7 +133,7 @@ class Peer {
             return;
         }
         if (block.index === chainLength) {
-            const transactions = Address.getTransactionsStatuses(block);
+            const transactions = Address.varifyGetAndGenerateBalances(block);
             blockchain.addBlock({ ...block, transactions });
             Address.calculateBlockchainBalances();
             blockchain.calculateCumulativeDifficult();
