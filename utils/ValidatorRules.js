@@ -58,7 +58,7 @@ class ValidatorRules {
             return false;
         if (signature[0] === signature[1])
             return false;
-        return /^([A-Fa-f0-9]{64})$/.test(signature[0]) && /^([A-Fa-f0-9]{64})$/.test(signature[1]);
+        return /^([A-Fa-f0-9]{63,64})$/.test(signature[0]) && /^([A-Fa-f0-9]{63,64})$/.test(signature[1]);
     }
 
     isValidTransactionHash(transaction) {
