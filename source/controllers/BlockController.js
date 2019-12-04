@@ -32,8 +32,15 @@ class BlockController {
 
     static async getSubmittedBlock({ body }, res) {
         const { blockHash, blockDataHash, ...blockHeader } = body;
-        if (blockHash.length !== 64 || blockDataHash.length !== 64)
+
+        const validator = new Validator([{
+            validations: ['isValidBlockHash'],
+            name: 'blockHash',
+            value: blockHash,
+        }]);
+        if (validator.validate().hasError()) {
             return res.status(400).json({ message: 'Invalid data.' });
+        }
 
         const blockCandidate = blockchain.getBlockCandidate(blockDataHash);
         if (!blockCandidate)
