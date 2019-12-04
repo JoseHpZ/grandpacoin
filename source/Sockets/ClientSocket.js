@@ -58,7 +58,7 @@ class ClientSocket {
             this.reconnectionHandler();
         })
         this.socket.on('reconnecting', (attemps) => {
-            if (attemps > 15) { // try to reconnect 15
+            if (attemps > 5) { // try to reconnect 15
                 this.socket.disconnect();
                 console.log(withColor('\nSomething happened with the peer server: ', 'yellow') + this.serverNodeUrl)
             } else {

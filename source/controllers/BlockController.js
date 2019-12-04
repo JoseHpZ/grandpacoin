@@ -32,9 +32,6 @@ class BlockController {
 
     static async getSubmittedBlock({ body }, res) {
         const { blockHash, blockDataHash, ...blockHeader } = body;
-        console.log('blockHash: ', blockHash)
-        console.log('blockDataHash: ', blockDataHash)
-
         const validator = new Validator([{
             validations: ['isValidBlockHash'],
             name: 'blockHash',
